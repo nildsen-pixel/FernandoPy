@@ -298,6 +298,7 @@ st.markdown("""
     .stPopover button {
         width: 100% !important;
         min-width: 130px !important;
+        color: #94A3B8 !important;
         background-color: #1E293B !important;
         white-space: nowrap !important;
     }

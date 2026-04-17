@@ -407,7 +407,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
                 return valor_variacao
             else:
                 print("Não foi possível encontrar a 'Variação do Dia %' na página.")
-                return None
+                return 0.0
             
 
         

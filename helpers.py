@@ -393,18 +393,23 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
         match = re.search(padrao, html_content, re.IGNORECASE | re.DOTALL)
         
         if match:
-            valor_variacao = match.group(1).strip()
-            print(f"Valor da 'Variação do Dia %': {valor_variacao}")
-            return valor_variacao
+            val = match.group(1).strip()
+            print(f"Valor da 'Variação do Dia %': {val}")
+            
+            val = float(match.group(1).replace('.', '').replace(',', '.'))
+            return round(val, 2)
+            
         else:
             # Padrão alternativo caso o primeiro não funcione (formatação diferente)
             padrao_alt = r'Variação do Dia %.*?>\s*([0-9.,%]+)'
             match_alt = re.search(padrao_alt, html_content, re.IGNORECASE | re.DOTALL)
             
             if match_alt:
-                valor_variacao = match_alt.group(1).strip()
-                print(f"Valor da 'Variação do Dia %': {valor_variacao}")
-                return valor_variacao
+                val = match_alt.group(1).strip()
+                print(f"Valor da 'Variação do Dia %': {val}")
+                
+                val = float(match.group(1).replace('.', '').replace(',', '.'))
+                return round(val, 2)
             else:
                 print("Não foi possível encontrar a 'Variação do Dia %' na página.")
                 return 0.0

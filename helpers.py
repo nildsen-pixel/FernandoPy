@@ -378,11 +378,44 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
     try:
         url_advfn = f"https://br.advfn.com/bolsa-de-valores/bmf/{ticker_advfn.upper()}/cotacao"
         resp = requests.get(url_advfn, headers=headers, timeout=4)
-        if resp.status_code == 200:
-            match = re.search(r'Varia[çc][aã]o\s*do\s*Dia\s*%.*?<td[^>]*>\s*([+-]?[\d,\.]+)', resp.text, re.IGNORECASE | re.DOTALL)
-            if match:
-                val = float(match.group(1).replace('.', '').replace(',', '.'))
-                return round(val, 2)
+        
+        resp.raise_for_status()  # Verifica se houve erro na requisição
+    
+        # Obtém o conteúdo HTML
+        html_content = resp.text
+        
+        # Padrão regex para encontrar o valor da "Variação do Dia %"
+        # Procura pelo texto "Variação do Dia %" e captura o valor que vem depois
+        # O padrão considera que pode haver espaços, quebras de linha e tags HTML entre eles
+        padrao = r'Variação do Dia %\s*</td>\s*<td[^>]*>\s*([^<]+)'
+        
+        # Busca pelo padrão no HTML
+        match = re.search(padrao, html_content, re.IGNORECASE | re.DOTALL)
+        
+        if match:
+            valor_variacao = match.group(1).strip()
+            print(f"Valor da 'Variação do Dia %': {valor_variacao}")
+            return valor_variacao
+        else:
+            # Padrão alternativo caso o primeiro não funcione (formatação diferente)
+            padrao_alt = r'Variação do Dia %.*?>\s*([0-9.,%]+)'
+            match_alt = re.search(padrao_alt, html_content, re.IGNORECASE | re.DOTALL)
+            
+            if match_alt:
+                valor_variacao = match_alt.group(1).strip()
+                print(f"Valor da 'Variação do Dia %': {valor_variacao}")
+                return valor_variacao
+            else:
+                print("Não foi possível encontrar a 'Variação do Dia %' na página.")
+                return None
+            
+
+        
+        # if resp.status_code == 200:
+        #     match = re.search(r'Varia[çc][aã]o\s*do\s*Dia\s*%.*?<td[^>]*>\s*([+-]?[\d,\.]+)', resp.text, re.IGNORECASE | re.DOTALL)
+        #     if match:
+        #         val = float(match.group(1).replace('.', '').replace(',', '.'))
+        #         return round(val, 2)
     except: pass
 
     return 0.0

@@ -1,0 +1,17 @@
+backcall==0.2.0
+catboost==1.2.10
+cffi==2.0.0
+curl_cffi==0.15.0
+docopt==0.6.2
+graphviz==0.21
+ipython==8.13.0
+MetaTrader5==5.0.5120
+multitasking==0.0.12
+packaging==26.0
+peewee==4.0.4
+setuptools==82.0.1
+streamlit-autorefresh==1.0.1
+websockets==16.0
+wheel==0.46.3
+yarg==0.1.9
+yfinance==1.2.1

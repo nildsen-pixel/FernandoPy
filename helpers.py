@@ -335,45 +335,45 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
         "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
     }
     
-    # try:
-    #     url_b3 = f"https://cotacao.b3.com.br/mds/api/v1/DerivativeQuotation/{ticker_advfn.upper()}"
-    #     headers_b3 = headers.copy()
-    #     headers_b3["Origin"] = "https://www.b3.com.br"
-    #     headers_b3["Referer"] = "https://www.b3.com.br/"
-    #     resp = requests.get(url_b3, headers=headers_b3, timeout=4)
-    #     if resp.status_code == 200:
-    #         data = resp.json()
-    #         sctn = data.get("Sctn", [])
-    #         if sctn:
-    #             scty_qtn = sctn[0].get("Data", [])[0].get("SctyQtn", {})
-    #             var_pts = float(scty_qtn.get("VartnPts", 0))
-    #             prev_close = float(scty_qtn.get("PrvsDayClsPric", 1))
-    #             if prev_close > 0:
-    #                 pct_change = (var_pts / prev_close) * 100
-    #                 return round(pct_change, 2)
-    # except: pass
+    try:
+        url_b3 = f"https://cotacao.b3.com.br/mds/api/v1/DerivativeQuotation/{ticker_advfn.upper()}"
+        headers_b3 = headers.copy()
+        headers_b3["Origin"] = "https://www.b3.com.br"
+        headers_b3["Referer"] = "https://www.b3.com.br/"
+        resp = requests.get(url_b3, headers=headers_b3, timeout=4)
+        if resp.status_code == 200:
+            data = resp.json()
+            sctn = data.get("Sctn", [])
+            if sctn:
+                scty_qtn = sctn[0].get("Data", [])[0].get("SctyQtn", {})
+                var_pts = float(scty_qtn.get("VartnPts", 0))
+                prev_close = float(scty_qtn.get("PrvsDayClsPric", 1))
+                if prev_close > 0:
+                    pct_change = (var_pts / prev_close) * 100
+                    return round(pct_change, 2)
+    except: pass
 
-    # try:
-    #     url_tv = "https://scanner.tradingview.com/brazil/scan"
-    #     payload = {"symbols": {"tickers": [ticker_tv]}, "columns": ["change"]}
-    #     resp = requests.post(url_tv, json=payload, headers=headers, timeout=4)
-    #     if resp.status_code == 200:
-    #         data = resp.json().get("data", [])
-    #         if data and len(data[0].get("d", [])) > 0:
-    #             val = float(data[0]["d"][0])
-    #             if -15.0 <= val <= 15.0:
-    #                 return round(val, 2)
-    # except: pass
+    try:
+        url_tv = "https://scanner.tradingview.com/brazil/scan"
+        payload = {"symbols": {"tickers": [ticker_tv]}, "columns": ["change"]}
+        resp = requests.post(url_tv, json=payload, headers=headers, timeout=4)
+        if resp.status_code == 200:
+            data = resp.json().get("data", [])
+            if data and len(data[0].get("d", [])) > 0:
+                val = float(data[0]["d"][0])
+                if -15.0 <= val <= 15.0:
+                    return round(val, 2)
+    except: pass
 
-    # try:
-    #     url_si = f"https://statusinvest.com.br/juros-futuros/{ticker_advfn.lower()}"
-    #     resp = requests.get(url_si, headers=headers, timeout=4)
-    #     if resp.status_code == 200:
-    #         match = re.search(r'title=\"Variação do valor\"[^>]*>.*?<b[^>]*>([+-]?[\d,\.]+)%</b>', resp.text, re.DOTALL)
-    #         if match:
-    #             val = float(match.group(1).replace('.', '').replace(',', '.'))
-    #             return round(val, 2)
-    # except: pass
+    try:
+        url_si = f"https://statusinvest.com.br/juros-futuros/{ticker_advfn.lower()}"
+        resp = requests.get(url_si, headers=headers, timeout=4)
+        if resp.status_code == 200:
+            match = re.search(r'title=\"Variação do valor\"[^>]*>.*?<b[^>]*>([+-]?[\d,\.]+)%</b>', resp.text, re.DOTALL)
+            if match:
+                val = float(match.group(1).replace('.', '').replace(',', '.'))
+                return round(val, 2)
+    except: pass
 
     try:
         url_advfn = f"https://br.advfn.com/bolsa-de-valores/bmf/{ticker_advfn.upper()}/cotacao"

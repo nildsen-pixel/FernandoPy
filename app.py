@@ -176,8 +176,8 @@ with st.spinner(""):
     di_35 = fetch_di_variacao("BMFBOVESPA:DI1F2035", "DI1F35")
 
 di_variacao = di_34
-cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
-cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
+# cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
+# cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 
 # CSS para fixar o layout e impedir alterações com redimensionamento
 st.markdown("""

@@ -395,7 +395,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
         if match:
             val = match.group(1).strip()
             print(f"Valor da 'Variação do Dia %': {val}") 
-            return val
+            return string_para_float(val)
             
         else:
             # Padrão alternativo caso o primeiro não funcione (formatação diferente)
@@ -405,7 +405,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
             if match_alt:
                 val = match_alt.group(1).strip()
                 print(f"Valor da 'Variação do Dia %': {val}")
-                return val
+                return string_para_float(val)
             else:
                 print("Não foi possível encontrar a 'Variação do Dia %' na página.")
                 return 0.0
@@ -456,3 +456,16 @@ def checar_e_enviar_alerta_di(di_nome, valor_atual):
 
 def enviar_alerta_email(di_nome, valor_atual, nivel_alerta):
     pass
+
+def string_para_float(string_percentual):
+    """
+    Versão mais simples da função de conversão.
+    """
+    # Remove espaços e o símbolo %
+    valor_limpo = string_percentual.strip().rstrip('%')
+    
+    # Substitui vírgula por ponto (padrão brasileiro)
+    valor_limpo = valor_limpo.replace(',', '.')
+    
+    # Converte para float
+    return float(valor_limpo)

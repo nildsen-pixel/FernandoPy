@@ -394,10 +394,8 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
         
         if match:
             val = match.group(1).strip()
-            print(f"Valor da 'Variação do Dia %': {val}")
-            
-            val = float(match.group(1).replace('.', '').replace(',', '.'))
-            return round(val, 2)
+            print(f"Valor da 'Variação do Dia %': {val}") 
+            return val
             
         else:
             # Padrão alternativo caso o primeiro não funcione (formatação diferente)
@@ -407,9 +405,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
             if match_alt:
                 val = match_alt.group(1).strip()
                 print(f"Valor da 'Variação do Dia %': {val}")
-                
-                val = float(match.group(1).replace('.', '').replace(',', '.'))
-                return round(val, 2)
+                return val
             else:
                 print("Não foi possível encontrar a 'Variação do Dia %' na página.")
                 return 0.0

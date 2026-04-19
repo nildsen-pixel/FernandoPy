@@ -151,7 +151,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         """, unsafe_allow_html=True)
 
     # ==========================================
-    # NOVO FRAME DO GRÁFICO (COPIADO DO SEU ARQUIVO)
+    # GRÁFICO COM ALTURA RESPONSIVA (MODIFICADO)
     # ==========================================
     common_idx = verde_count.index.intersection(vermelha_count.index).intersection(rastro_azul.index)
     
@@ -185,7 +185,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         marker=dict(size=5, symbol='circle'),
         fill='tozeroy',
         fillcolor='rgba(239, 68, 68, 0.05)',
-        hovertemplate='%{y:.0f}<extra></extra>' # <-- Hora removida daqui
+        hovertemplate='%{y:.0f}<extra></extra>'
     ))
 
     # 3. VERDE
@@ -198,7 +198,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         marker=dict(size=5, symbol='circle'),
         fill='tozeroy',
         fillcolor='rgba(16, 185, 129, 0.05)',
-        hovertemplate='%{y:.0f}<extra></extra>' # <-- Hora removida daqui
+        hovertemplate='%{y:.0f}<extra></extra>'
     ))
 
     # 4. FLUXO BASE (Cinza)
@@ -230,7 +230,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         line=dict(color='#38BDF8', width=2.0, shape='spline', smoothing=0.8, dash='dot'),
         marker=dict(size=5, symbol='circle'),
         yaxis='y2',
-        hovertemplate='Azul: %{y:.0f}<extra></extra>' # <-- Trocamos o hoverinfo='skip' por esta linha
+        hovertemplate='Azul: %{y:.0f}<extra></extra>'
     ))
 
     # Folga automática para evitar corte superior/inferior
@@ -250,7 +250,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         y_max, y_min, padding = 10, -10, 5
 
     # ==========================================
-    # LAYOUT GERAL DO GRÁFICO (COPIADO DO SEU ARQUIVO)
+    # LAYOUT GERAL DO GRÁFICO (MODIFICADO PARA RESPONSIVIDADE)
     # ==========================================
     fig.update_layout(
         hovermode='x unified',
@@ -258,9 +258,9 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             bgcolor="#1E293B",
             font_color="white",
             bordercolor="rgba(255,255,255,0.2)",
-            align="left" # <-- Alinha o texto da caixinha (incluindo o spread) à esquerda
+            align="left"
         ),
-        #height=900,
+        height=380,  # Altura reduzida para evitar rolagem
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -268,24 +268,25 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             y=1.05,
             xanchor="center",
             x=0.5,
-            font=dict(color="white", size=13),
+            font=dict(color="white", size=11),  # Fonte ligeiramente menor
             bgcolor="rgba(0,0,0,0)"
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=10, r=10, t=50, b=20),
+        margin=dict(l=10, r=50, t=30, b=20),  # Margens ajustadas
         xaxis=dict(
             showgrid=True,
             gridcolor='rgba(255,255,255,0.1)',
             automargin=True,
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=12), # <-- Força a cor clara nos números do eixo X
+            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida para caber melhor
             hoverformat='%H:%M',
             showspikes=True,
             spikemode='across',
             spikecolor='rgba(255,255,255,0.12)',
             spikethickness=0.3,
-            spikesnap='cursor'
+            spikesnap='cursor',
+            tickangle=-45 if len(common_idx) > 20 else 0  # Rotaciona labels se muitos pontos
         ),
         yaxis=dict(
             showgrid=True,
@@ -293,21 +294,31 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             side='left',
             automargin=True,
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=12), # <-- Força a cor clara nos números do eixo Y principal
+            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida
             range=[y_min - padding, y_max + padding]
         ),
         yaxis2=dict(
-            title=dict(text="Rastro Azul", font=dict(color="#F8FAFC")),
+            title=dict(text="Azul", font=dict(color="#F8FAFC", size=10)),  # Título menor
             overlaying='y',
             side='right',
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=12), # <-- Força a cor clara nos números do eixo Y secundário
+            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida
             range=[
                 (rastro_azul.min() * 1.2 if not rastro_azul.empty else -75),
                 (rastro_azul.max() * 1.2 if not rastro_azul.empty else 75)
             ]
         ),
+        # Configuração para responsividade mobile
+        autosize=True,
+        width=None  # Remove largura fixa, permite ajuste automático
     )
+    
+    # Reduz tamanho dos marcadores se houver muitos pontos
+    num_points = len(common_idx)
+    if num_points > 50:
+        fig.update_traces(marker=dict(size=3))
+    elif num_points > 100:
+        fig.update_traces(marker=dict(size=2))
 
     st.plotly_chart(
         fig,
@@ -315,7 +326,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         theme=None,
         config={
             'displayModeBar': True,
-            'scrollZoom': False,
-            'displaylogo': False
+            'scrollZoom': True,  # Habilita zoom para mobile
+            'displaylogo': False,
+            'responsive': True   # Força responsividade
         }
     )

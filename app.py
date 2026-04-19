@@ -62,7 +62,7 @@ if bg_file.exists():
     except Exception:
         pass
 
-# --- 3. CSS AVANÇADO E COMPACTAÇÃO ---
+# --- 3. CSS AVANÇADO E COMPACTAÇÃO COM ALTURA TOTAL ---
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap');
@@ -71,13 +71,21 @@ st.markdown(f"""
     box-sizing: border-box;
 }}
 
-/* Reset e configurações base */
+/* Reset e configurações base - OTIMIZADO PARA ALTURA TOTAL */
 .block-container {{ 
-    padding-top: 1rem !important; 
-    padding-bottom: 0px !important;
+    padding-top: 0.5rem !important; 
+    padding-bottom: 0 !important;
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     max-width: 100% !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}}
+
+/* Remove espaçamento extra do main */
+.main > div {{
+    padding-top: 0 !important;
 }}
 
 /* Sidebar responsiva */
@@ -106,24 +114,45 @@ st.markdown(f"""
     }}
 }}
 
-/* Gráfico responsivo */
-.stPlotlyChart > div {{ 
-    height: 70vh !important;
-    min-height: 400px !important;
+/* GRÁFICO RESPONSIVO - OCUPA ALTURA TOTAL DISPONÍVEL */
+.stPlotlyChart {{
+    width: 100% !important;
+    height: auto !important;
+    min-height: calc(100vh - 280px) !important;
+    flex: 1 !important;
+}}
+
+.stPlotlyChart > div {{
+    height: 100% !important;
+    min-height: calc(100vh - 280px) !important;
     width: 100% !important;
 }}
 
-@media (max-width: 1024px) {{
-    .stPlotlyChart > div {{ 
-        height: 60vh !important;
-        min-height: 350px !important;
+@media (max-width: 1200px) {{
+    .stPlotlyChart,
+    .stPlotlyChart > div {{
+        min-height: calc(100vh - 260px) !important;
+    }}
+}}
+
+@media (max-width: 992px) {{
+    .stPlotlyChart,
+    .stPlotlyChart > div {{
+        min-height: calc(100vh - 240px) !important;
     }}
 }}
 
 @media (max-width: 768px) {{
-    .stPlotlyChart > div {{ 
-        height: 50vh !important;
-        min-height: 300px !important;
+    .stPlotlyChart,
+    .stPlotlyChart > div {{
+        min-height: calc(100vh - 200px) !important;
+    }}
+}}
+
+@media (max-width: 576px) {{
+    .stPlotlyChart,
+    .stPlotlyChart > div {{
+        min-height: calc(100vh - 180px) !important;
     }}
 }}
 
@@ -149,10 +178,15 @@ st.markdown(f"""
     margin-left: 10px !important;
 }}
 
-/* Tabs responsivas */
+/* Tabs responsivas - OTIMIZADAS */
+.stTabs {{
+    margin-top: 0 !important;
+}}
+
 .stTabs [data-baseweb="tab-list"] {{
     flex-wrap: wrap !important;
     gap: 5px !important;
+    background-color: transparent !important;
 }}
 
 .stTabs [data-baseweb="tab"] {{
@@ -160,10 +194,132 @@ st.markdown(f"""
     font-size: clamp(12px, 3vw, 14px) !important;
 }}
 
-/* Remover scroll horizontal */
+.stTabs [data-baseweb="tab-panel"] {{
+    padding-top: 0.5rem !important;
+    padding-bottom: 0 !important;
+    height: auto !important;
+    flex: 1 !important;
+}}
+
+/* Remove scroll horizontal */
 .main {{
     overflow-x: hidden !important;
 }}
+
+/* Container principal das abas ocupa altura total */
+div[data-testid="stVerticalBlock"] {{
+    gap: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}}
+
+/* Container do gráfico ocupa espaço disponível */
+.element-container:has(.stPlotlyChart) {{
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}}
+</style>
+""", unsafe_allow_html=True)
+
+# --- 4. CSS PARA FIXAR LAYOUT DO CABEÇALHO ---
+st.markdown("""
+<style>
+/* Fixa o layout das colunas para não alterar com redimensionamento */
+div[data-testid="column"] {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+
+/* Impede que o container principal redimensione as colunas */
+.stColumns {
+    flex-wrap: nowrap !important;
+    min-width: 100% !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Larguras responsivas para colunas */
+.stColumns > div:nth-child(1) { 
+    min-width: 250px !important; 
+    max-width: 320px !important; 
+} /* Título */
+
+.stColumns > div:nth-child(2) { 
+    min-width: 120px !important; 
+    max-width: 150px !important; 
+} /* Período */
+
+.stColumns > div:nth-child(3) { 
+    min-width: 90px !important; 
+    max-width: 110px !important; 
+} /* DI34 */
+
+.stColumns > div:nth-child(4) { 
+    min-width: 90px !important; 
+    max-width: 110px !important; 
+} /* DI35 */
+
+.stColumns > div:nth-child(5) { 
+    min-width: 200px !important; 
+    max-width: auto !important; 
+    flex: 1 !important;
+} /* Dados */
+
+/* Impede quebra de linha nos textos */
+.modern-title, .title-date {
+    white-space: nowrap !important;
+}
+
+/* Mantém os cards DI com tamanho fixo */
+div[style*="text-align: center; background-color: #1E293B"] {
+    min-width: 80px !important;
+    width: 100% !important;
+}
+
+/* Fixa o tamanho do popover */
+.stPopover {
+    min-width: 120px !important;
+}
+
+.stPopover button {
+    width: 100% !important;
+    min-width: 120px !important;
+    color: #94A3B8 !important;
+    background-color: #1E293B !important;
+    white-space: nowrap !important;
+}
+
+/* Ajuste para mobile - adiciona scroll horizontal no cabeçalho */
+@media (max-width: 800px) {
+    .stColumns {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .stColumns > div {
+        display: inline-block !important;
+        float: none !important;
+    }
+    
+    /* Reduz padding em mobile */
+    .stTabs [data-baseweb="tab-panel"] {
+        padding-top: 0.25rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .stColumns > div:nth-child(1) { min-width: 200px !important; }
+    .stColumns > div:nth-child(2) { min-width: 100px !important; }
+    .stColumns > div:nth-child(3) { min-width: 80px !important; }
+    .stColumns > div:nth-child(4) { min-width: 80px !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -179,162 +335,8 @@ di_variacao = di_34
 cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
 cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 
-# CSS para fixar o layout e impedir alterações com redimensionamento
-st.markdown("""
-<style>
-    /* Fixa o layout das colunas para não alterar com redimensionamento */
-    div[data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        flex-shrink: 0 !important;
-        flex-grow: 0 !important;
-    }
-    
-    /* Impede que o container principal redimensione as colunas */
-    .stColumns {
-        flex-wrap: nowrap !important;
-        min-width: 100% !important;
-    }
-    
-    /* Fixa larguras mínimas e máximas para cada coluna */
-    .stColumns > div:nth-child(1) { min-width: 250px !important; max-width: 280px !important; } /* Título */
-    .stColumns > div:nth-child(2) { min-width: 120px !important; max-width: 140px !important; } /* Período */
-    .stColumns > div:nth-child(3) { min-width: 90px !important; max-width: 100px !important; } /* DI34 */
-    .stColumns > div:nth-child(4) { min-width: 90px !important; max-width: 100px !important; } /* DI35 */
-    .stColumns > div:nth-child(5) { min-width: 300px !important; max-width: auto !important; } /* Dados */
-    
-    /* Impede quebra de linha nos textos */
-    .modern-title, .title-date {
-        white-space: nowrap !important;
-    }
-    
-    /* Mantém os cards DI com tamanho fixo */
-    div[style*="text-align: center; background-color: #1E293B"] {
-        min-width: 80px !important;
-        width: 100% !important;
-    }
-    
-    /* Fixa o tamanho do popover */
-    .stPopover {
-        min-width: 120px !important;
-    }
-    
-    /* Impede zoom e redimensionamento em mobile */
-    @media (max-width: 768px) {
-        .stColumns {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-        }
-        
-        div[data-testid="column"] {
-            min-width: auto !important;
-        }
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Define larguras fixas para as colunas (não relativas)
+# Define colunas com larguras fixas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
-
-# CSS adicional para fixar completamente o layout do cabeçalho
-st.markdown("""
-<style>
-    /* Fixa o container do cabeçalho */
-    .stColumns {
-        flex-wrap: nowrap !important;
-        min-width: 100% !important;
-        margin-bottom: 0 !important;
-    }
-    
-    /* Larguras absolutamente fixas para cada coluna */
-    .stColumns > div:nth-child(1) { 
-        width: 320px !important; 
-        min-width: 320px !important; 
-        max-width: 320px !important; 
-        flex: 0 0 320px !important;
-    } /* Título */
-    
-    .stColumns > div:nth-child(2) { 
-        width: 150px !important; 
-        min-width: 150px !important; 
-        max-width: 150px !important; 
-        flex: 0 0 150px !important;
-    } /* Período */
-    
-    .stColumns > div:nth-child(3) { 
-        width: 110px !important; 
-        min-width: 110px !important; 
-        max-width: 110px !important; 
-        flex: 0 0 110px !important;
-    } /* DI34 */
-    
-    .stColumns > div:nth-child(4) { 
-        width: 110px !important; 
-        min-width: 110px !important; 
-        max-width: 110px !important; 
-        flex: 0 0 110px !important;
-    } /* DI35 */
-    
-    .stColumns > div:nth-child(5) { 
-        width: auto !important;
-        flex: 1 1 auto !important;
-        min-width: 200px !important;
-    } /* Dados */
-    
-    /* Fixa o título */
-    .modern-title {
-        margin: 0 !important;
-        padding: 0 !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Fixa o popover */
-    .stPopover {
-        width: 100% !important;
-        min-width: 130px !important;
-    }
-    
-    .stPopover button {
-        width: 100% !important;
-        min-width: 130px !important;
-        color: #94A3B8 !important;
-        background-color: #1E293B !important;
-        white-space: nowrap !important;
-    }
-    
-    /* Fixa os cards DI */
-    div[style*="text-align: center; background-color: #1E293B"] {
-        width: 100% !important;
-        min-width: 95px !important;
-        padding: 8px 5px !important;
-    }
-    
-    /* Impede qualquer tipo de quebra ou redimensionamento */
-    * {
-        flex-shrink: 0;
-    }
-    
-    /* Ajuste para mobile - adiciona scroll horizontal */
-    @media (max-width: 800px) {
-        .stColumns {
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-            white-space: nowrap !important;
-            -webkit-overflow-scrolling: touch !important;
-            flex-wrap: nowrap !important;
-        }
-        
-        .stColumns > div {
-            display: inline-block !important;
-            float: none !important;
-        }
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Define colunas com larguras absolutamente fixas
-#c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
     st.markdown(f"""
@@ -355,13 +357,10 @@ with c_fd1:
         )
         start_time = st.time_input("🕐 Hora Início", value=time(0, 0), key="start_time_fixed")
         
-        
         st.markdown(f"""
         <div style='margin: 10px 0px; opacity: 0.2;'>           
         </div>
         """, unsafe_allow_html=True)
-        
-        #st.markdown("<hr style='margin: 10px 0px; opacity: 0.2;'>", unsafe_allow_html=True)
         
         end_date = st.selectbox(
             "📅 Fim",
@@ -423,6 +422,50 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+</script>
+""", height=0)
+
+# --- JAVASCRIPT PARA REDIMENSIONAMENTO DINÂMICO DO GRÁFICO ---
+components.html("""
+<script>
+function resizeAllCharts() {
+    setTimeout(function() {
+        // Encontra todos os containers de gráfico
+        var chartContainers = document.querySelectorAll('.stPlotlyChart');
+        var windowHeight = window.innerHeight;
+        var headerHeight = 250; // Altura estimada do cabeçalho + abas
+        
+        chartContainers.forEach(function(container) {
+            if (container && container.style) {
+                var newHeight = (windowHeight - headerHeight) + 'px';
+                container.style.height = newHeight;
+                container.style.minHeight = newHeight;
+                
+                // Força o redimensionamento do Plotly
+                if (container.children[0] && container.children[0]._fullLayout) {
+                    Plotly.relayout(container.children[0], {
+                        autosize: true,
+                        height: windowHeight - headerHeight
+                    });
+                }
+            }
+        });
+    }, 100);
+}
+
+// Executa no carregamento
+window.addEventListener('load', resizeAllCharts);
+
+// Executa quando a janela for redimensionada
+window.addEventListener('resize', function() {
+    setTimeout(resizeAllCharts, 100);
+});
+
+// Observa mudanças na DOM
+var observer = new MutationObserver(function(mutations) {
+    resizeAllCharts();
+});
+observer.observe(document.body, { childList: true, subtree: true });
 </script>
 """, height=0)
 

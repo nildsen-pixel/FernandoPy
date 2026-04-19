@@ -325,8 +325,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         use_container_width=True,
         theme=None,
         config={
-            'displayModeBar': True,
-            'scrollZoom': True,  # Habilita zoom para mobile
+            'displayModeBar': False,
+            'scrollZoom': False,  # Habilita zoom para mobile
             'displaylogo': False,
             'responsive': True   # Força responsividade
         }

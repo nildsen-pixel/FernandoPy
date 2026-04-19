@@ -309,13 +309,9 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         ),
     )
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        theme=None,
-        config={
-            'displayModeBar': True,
-            'scrollZoom': False,
-            'displaylogo': False
-        }
-    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    fig.update_layout(
+        autosize=True,
+        margin=dict(l=10, r=10, t=30, b=10)
+        )

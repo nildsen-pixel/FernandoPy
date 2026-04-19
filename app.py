@@ -311,6 +311,8 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 .stPopover button {
     width: 100% !important;
     min-width: 100px !important;
+    color: #94A3B8 !important;
+    background-color: #1E293B !important;
     font-size: 12px !important;
     padding: 4px 8px !important;
 }

@@ -31,7 +31,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. SISTEMA DE BACKGROUND E OCULTAÇÃO DO "RUNNING" ---
+# --- 2. SISTEMA DE BACKGROUND ---
 bg_file = Path(__file__).with_name("fundo.png")
 if bg_file.exists():
     try:
@@ -62,245 +62,267 @@ if bg_file.exists():
     except Exception:
         pass
 
-# --- 3. CSS AVANÇADO E COMPACTAÇÃO COM ALTURA TOTAL ---
-st.markdown(f"""
+# --- 3. CSS PRINCIPAL COM FOCO EM DISPOSITIVOS MÓVEIS ---
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap');
-* {{ 
+* { 
     font-family: 'Inter', sans-serif;
     box-sizing: border-box;
-}}
+}
 
-/* Reset e configurações base - OTIMIZADO PARA ALTURA TOTAL */
-.block-container {{ 
-    padding-top: 0.5rem !important; 
+/* Reset e configurações base - OTIMIZADO PARA MOBILE */
+.block-container { 
+    padding-top: 0.25rem !important; 
     padding-bottom: 0 !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
     max-width: 100% !important;
     min-height: 100vh !important;
     display: flex !important;
     flex-direction: column !important;
-}}
+}
 
-/* Remove espaçamento extra do main */
-.main > div {{
+/* Remove espaçamento extra */
+.main > div {
     padding-top: 0 !important;
-}}
+}
+
+/* Esconde o header padrão do Streamlit */
+header {
+    display: none !important;
+}
 
 /* Sidebar responsiva */
-[data-testid="stSidebar"] {{
+[data-testid="stSidebar"] {
     min-width: 200px !important;
     width: auto !important;
     max-width: 250px !important;
     background-color: rgba(11, 15, 25, 0.95) !important;
     backdrop-filter: blur(12px);
     border-right: 1px solid rgba(255,255,255,0.05);
-}}
+}
 
 /* Ajuste para telas pequenas */
-@media (max-width: 768px) {{
-    [data-testid="stSidebar"] {{
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
         min-width: 100% !important;
         max-width: 100% !important;
         position: fixed !important;
         z-index: 999 !important;
         height: 100vh !important;
-    }}
+    }
     
-    .block-container {{
-        padding-top: 0.5rem !important;
+    .block-container {
+        padding-top: 0.25rem !important;
         margin-top: 0 !important;
-    }}
-}}
+    }
+}
 
-/* GRÁFICO RESPONSIVO - OCUPA ALTURA TOTAL DISPONÍVEL */
-.stPlotlyChart {{
+/* CONFIGURAÇÃO DO GRÁFICO PARA MOBILE */
+.stPlotlyChart {
     width: 100% !important;
     height: auto !important;
-    min-height: calc(100vh - 280px) !important;
     flex: 1 !important;
-}}
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
-.stPlotlyChart > div {{
+.stPlotlyChart > div {
+    width: 100% !important;
     height: 100% !important;
-    min-height: calc(100vh - 280px) !important;
-    width: 100% !important;
-}}
+}
 
-@media (max-width: 1200px) {{
+/* Desktop */
+@media (min-width: 1024px) {
     .stPlotlyChart,
-    .stPlotlyChart > div {{
-        min-height: calc(100vh - 260px) !important;
-    }}
-}}
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 250px) !important;
+    }
+}
 
-@media (max-width: 992px) {{
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
     .stPlotlyChart,
-    .stPlotlyChart > div {{
-        min-height: calc(100vh - 240px) !important;
-    }}
-}}
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 220px) !important;
+    }
+}
 
-@media (max-width: 768px) {{
+/* Mobile - O MAIS IMPORTANTE */
+@media (max-width: 767px) {
     .stPlotlyChart,
-    .stPlotlyChart > div {{
-        min-height: calc(100vh - 200px) !important;
-    }}
-}}
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 160px) !important;
+        height: calc(100vh - 160px) !important;
+        max-height: calc(100vh - 160px) !important;
+    }
+    
+    /* Força o container a não ter scroll */
+    .main .block-container {
+        overflow-y: visible !important;
+        height: auto !important;
+    }
+}
 
-@media (max-width: 576px) {{
+/* Ajuste para mobile muito pequeno */
+@media (max-width: 480px) {
     .stPlotlyChart,
-    .stPlotlyChart > div {{
-        min-height: calc(100vh - 180px) !important;
-    }}
-}}
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 140px) !important;
+        height: calc(100vh - 140px) !important;
+        max-height: calc(100vh - 140px) !important;
+    }
+}
 
-/* Grid responsivo para colunas */
-[data-testid="column"] {{
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
-}}
-
-/* Cards responsivos */
-.prob-box, .leilao-box, .bt-card {{
-    width: 100%;
-    margin-bottom: 10px;
-}}
-
-/* Títulos responsivos */
-.modern-title {{
-    font-size: clamp(1.2rem, 5vw, 2.5rem) !important;
-}}
-
-.title-date {{
-    font-size: clamp(0.8rem, 3vw, 1.5rem) !important;
-    margin-left: 10px !important;
-}}
-
-/* Tabs responsivas - OTIMIZADAS */
-.stTabs {{
-    margin-top: 0 !important;
-}}
-
-.stTabs [data-baseweb="tab-list"] {{
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    background-color: transparent !important;
-}}
-
-.stTabs [data-baseweb="tab"] {{
-    padding: 8px 12px !important;
-    font-size: clamp(12px, 3vw, 14px) !important;
-}}
-
-.stTabs [data-baseweb="tab-panel"] {{
-    padding-top: 0.5rem !important;
-    padding-bottom: 0 !important;
-    height: auto !important;
-    flex: 1 !important;
-}}
-
-/* Remove scroll horizontal */
-.main {{
-    overflow-x: hidden !important;
-}}
-
-/* Container principal das abas ocupa altura total */
-div[data-testid="stVerticalBlock"] {{
+/* Container flexível */
+div[data-testid="stVerticalBlock"] {
     gap: 0 !important;
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-}}
+}
 
-/* Container do gráfico ocupa espaço disponível */
-.element-container:has(.stPlotlyChart) {{
+/* Container do gráfico ocupa todo espaço */
+.element-container:has(.stPlotlyChart) {
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-}}
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Tabs otimizadas para mobile */
+.stTabs {
+    margin-top: 0 !important;
+    flex-shrink: 0 !important;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+    background-color: transparent !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+}
+
+.stTabs [data-baseweb="tab-panel"] {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Títulos responsivos */
+.modern-title {
+    font-size: clamp(1rem, 4vw, 2rem) !important;
+    margin: 0 !important;
+}
+
+.title-date {
+    font-size: clamp(0.7rem, 3vw, 1.2rem) !important;
+    margin-left: 8px !important;
+}
+
+/* Remove scroll horizontal */
+.main {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Esconde scroll vertical desnecessário */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. CSS PARA FIXAR LAYOUT DO CABEÇALHO ---
+# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) ---
 st.markdown("""
 <style>
-/* Fixa o layout das colunas para não alterar com redimensionamento */
+/* Fixa o layout das colunas */
 div[data-testid="column"] {
     display: flex;
     flex-direction: column;
     justify-content: center;
     flex-shrink: 0 !important;
-    flex-grow: 0 !important;
 }
 
-/* Impede que o container principal redimensione as colunas */
 .stColumns {
     flex-wrap: nowrap !important;
     min-width: 100% !important;
     margin-bottom: 0.5rem !important;
+    gap: 0.5rem !important;
 }
 
 /* Larguras responsivas para colunas */
 .stColumns > div:nth-child(1) { 
-    min-width: 250px !important; 
-    max-width: 320px !important; 
-} /* Título */
+    min-width: 180px !important; 
+    max-width: 280px !important; 
+}
 
 .stColumns > div:nth-child(2) { 
-    min-width: 120px !important; 
-    max-width: 150px !important; 
-} /* Período */
+    min-width: 100px !important; 
+    max-width: 130px !important; 
+}
 
 .stColumns > div:nth-child(3) { 
-    min-width: 90px !important; 
-    max-width: 110px !important; 
-} /* DI34 */
+    min-width: 80px !important; 
+    max-width: 95px !important; 
+}
 
 .stColumns > div:nth-child(4) { 
-    min-width: 90px !important; 
-    max-width: 110px !important; 
-} /* DI35 */
+    min-width: 80px !important; 
+    max-width: 95px !important; 
+}
 
 .stColumns > div:nth-child(5) { 
-    min-width: 200px !important; 
-    max-width: auto !important; 
+    min-width: 150px !important; 
     flex: 1 !important;
-} /* Dados */
-
-/* Impede quebra de linha nos textos */
-.modern-title, .title-date {
-    white-space: nowrap !important;
 }
 
-/* Mantém os cards DI com tamanho fixo */
+/* Cards DI responsivos */
 div[style*="text-align: center; background-color: #1E293B"] {
-    min-width: 80px !important;
-    width: 100% !important;
+    min-width: 70px !important;
+    padding: 6px 4px !important;
 }
 
-/* Fixa o tamanho do popover */
+div[style*="text-align: center; background-color: #1E293B"] > div:first-child {
+    font-size: 10px !important;
+}
+
+div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
+    font-size: 14px !important;
+}
+
+/* Popover responsivo */
 .stPopover {
-    min-width: 120px !important;
+    min-width: 100px !important;
 }
 
 .stPopover button {
     width: 100% !important;
-    min-width: 120px !important;
-    color: #94A3B8 !important;
-    background-color: #1E293B !important;
-    white-space: nowrap !important;
+    min-width: 100px !important;
+    font-size: 12px !important;
+    padding: 4px 8px !important;
 }
 
-/* Ajuste para mobile - adiciona scroll horizontal no cabeçalho */
-@media (max-width: 800px) {
+/* Mobile: cabeçalho com scroll horizontal */
+@media (max-width: 768px) {
     .stColumns {
         overflow-x: auto !important;
         overflow-y: hidden !important;
         white-space: nowrap !important;
         -webkit-overflow-scrolling: touch !important;
-        flex-wrap: nowrap !important;
+        gap: 0.25rem !important;
     }
     
     .stColumns > div {
@@ -308,22 +330,24 @@ div[style*="text-align: center; background-color: #1E293B"] {
         float: none !important;
     }
     
-    /* Reduz padding em mobile */
-    .stTabs [data-baseweb="tab-panel"] {
-        padding-top: 0.25rem !important;
-    }
+    /* Reduz ainda mais em mobile pequeno */
+    .stColumns > div:nth-child(1) { min-width: 150px !important; }
+    .stColumns > div:nth-child(2) { min-width: 90px !important; }
+    .stColumns > div:nth-child(3) { min-width: 70px !important; }
+    .stColumns > div:nth-child(4) { min-width: 70px !important; }
+    .stColumns > div:nth-child(5) { min-width: 120px !important; }
 }
 
 @media (max-width: 480px) {
-    .stColumns > div:nth-child(1) { min-width: 200px !important; }
-    .stColumns > div:nth-child(2) { min-width: 100px !important; }
-    .stColumns > div:nth-child(3) { min-width: 80px !important; }
-    .stColumns > div:nth-child(4) { min-width: 80px !important; }
+    .stColumns > div:nth-child(1) { min-width: 130px !important; }
+    .stColumns > div:nth-child(2) { min-width: 80px !important; }
+    .stColumns > div:nth-child(3) { min-width: 65px !important; }
+    .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. INTERFACE PRINCIPAL E FILTROS ---
+# --- 5. INTERFACE PRINCIPAL ---
 st_autorefresh(interval=60000, key="data_refresh")
 datas_disponiveis = gerar_dias_uteis()
 
@@ -335,14 +359,14 @@ di_variacao = di_34
 cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
 cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 
-# Define colunas com larguras fixas
+# Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown(f"""
-    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; font-size: 2.5rem; white-space: nowrap; overflow: visible;'>
+    st.markdown("""
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
-        <span id='digital-clock' class='title-date' style='margin-left: 15px; font-size: 1.5rem; color: #94A3B8; white-space: nowrap; display: inline-block;'>| --:--:--</span>
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
     </h1>
     """, unsafe_allow_html=True)
 
@@ -356,11 +380,6 @@ with c_fd1:
             key="start_date_fixed"
         )
         start_time = st.time_input("🕐 Hora Início", value=time(0, 0), key="start_time_fixed")
-        
-        st.markdown(f"""
-        <div style='margin: 10px 0px; opacity: 0.2;'>           
-        </div>
-        """, unsafe_allow_html=True)
         
         end_date = st.selectbox(
             "📅 Fim",
@@ -376,17 +395,17 @@ animacao_35 = checar_e_enviar_alerta_di("DI35", di_35)
 
 with c_di34:
     st.markdown(f"""
-    <div style='text-align: center; background-color: #1E293B; padding: 10px 5px; border-radius: 8px; {animacao_34}; width: 100%; min-width: 95px; box-sizing: border-box;'>
-        <div style='color: #94A3B8; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>DI1F34</div>
-        <div style='color: {cor_34}; font-size: 16px; font-weight: bold; white-space: nowrap;'>{di_34:+.2f}%</div>
+    <div style='text-align: center; background-color: #1E293B; padding: 8px 4px; border-radius: 8px; {animacao_34}; width: 100%; box-sizing: border-box;'>
+        <div style='color: #94A3B8; font-size: 10px; font-weight: 600; white-space: nowrap;'>DI1F34</div>
+        <div style='color: {cor_34}; font-size: 14px; font-weight: bold; white-space: nowrap;'>{di_34:+.2f}%</div>
     </div>
     """, unsafe_allow_html=True)
 
 with c_di35:
     st.markdown(f"""
-    <div style='text-align: center; background-color: #1E293B; padding: 10px 5px; border-radius: 8px; {animacao_35}; width: 100%; min-width: 95px; box-sizing: border-box;'>
-        <div style='color: #94A3B8; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>DI1F35</div>
-        <div style='color: {cor_35}; font-size: 16px; font-weight: bold; white-space: nowrap;'>{di_35:+.2f}%</div>
+    <div style='text-align: center; background-color: #1E293B; padding: 8px 4px; border-radius: 8px; {animacao_35}; width: 100%; box-sizing: border-box;'>
+        <div style='color: #94A3B8; font-size: 10px; font-weight: 600; white-space: nowrap;'>DI1F35</div>
+        <div style='color: {cor_35}; font-size: 14px; font-weight: bold; white-space: nowrap;'>{di_35:+.2f}%</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -398,7 +417,6 @@ end_dt = pd.Timestamp(f"{end_date} {end_time}").tz_localize(BRT)
 if start_dt > end_dt:
     start_dt, end_dt = end_dt, start_dt
 
-# Substitua as chamadas originais por estas:
 verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
 vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 
@@ -425,47 +443,53 @@ updateClock();
 </script>
 """, height=0)
 
-# --- JAVASCRIPT PARA REDIMENSIONAMENTO DINÂMICO DO GRÁFICO ---
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
 components.html("""
 <script>
-function resizeAllCharts() {
+function resizeChartsForMobile() {
     setTimeout(function() {
-        // Encontra todos os containers de gráfico
-        var chartContainers = document.querySelectorAll('.stPlotlyChart');
+        var isMobile = window.innerWidth <= 768;
+        var charts = document.querySelectorAll('.stPlotlyChart');
         var windowHeight = window.innerHeight;
-        var headerHeight = 250; // Altura estimada do cabeçalho + abas
         
-        chartContainers.forEach(function(container) {
-            if (container && container.style) {
-                var newHeight = (windowHeight - headerHeight) + 'px';
-                container.style.height = newHeight;
-                container.style.minHeight = newHeight;
+        // Calcula altura disponível baseado no dispositivo
+        var headerHeight = isMobile ? 140 : 250;
+        var newHeight = windowHeight - headerHeight;
+        
+        charts.forEach(function(chart) {
+            if (chart && chart.style) {
+                // Força altura exata
+                chart.style.height = newHeight + 'px';
+                chart.style.minHeight = newHeight + 'px';
+                chart.style.maxHeight = newHeight + 'px';
                 
-                // Força o redimensionamento do Plotly
-                if (container.children[0] && container.children[0]._fullLayout) {
-                    Plotly.relayout(container.children[0], {
-                        autosize: true,
-                        height: windowHeight - headerHeight
-                    });
+                // Redimensiona o Plotly se existir
+                if (chart.children[0] && chart.children[0]._fullLayout) {
+                    try {
+                        Plotly.relayout(chart.children[0], {
+                            autosize: true,
+                            height: newHeight
+                        });
+                    } catch(e) {
+                        console.log("Plotly not ready yet");
+                    }
                 }
             }
         });
-    }, 100);
+    }, 200);
 }
 
-// Executa no carregamento
-window.addEventListener('load', resizeAllCharts);
-
-// Executa quando a janela for redimensionada
+// Executa no carregamento e redimensionamento
+window.addEventListener('load', resizeChartsForMobile);
 window.addEventListener('resize', function() {
-    setTimeout(resizeAllCharts, 100);
+    setTimeout(resizeChartsForMobile, 150);
 });
 
-// Observa mudanças na DOM
+// Força redimensionamento quando as abas mudam
 var observer = new MutationObserver(function(mutations) {
-    resizeAllCharts();
+    resizeChartsForMobile();
 });
-observer.observe(document.body, { childList: true, subtree: true });
+observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
 """, height=0)
 
@@ -483,7 +507,7 @@ with tab3:
 
 # Função principal
 def main():
-    pass  # Tudo já executado acima
+    pass
 
 if __name__ == "__main__":
     main()

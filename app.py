@@ -10,6 +10,7 @@ from pathlib import Path
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 import requests
+from datetime import datetime
 
 # Imports das abas
 from tab_grafico import render_grafico
@@ -351,19 +352,17 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 """, unsafe_allow_html=True)
 
 # --- 5. INTERFACE PRINCIPAL ---
-st_autorefresh(interval=1000, key="clock_refresh")
-
+st_autorefresh(interval=60000, key="data_refresh")
+datas_disponiveis = gerar_dias_uteis()
 
 # --- CONTROLE DE ATUALIZAÇÃO DOS DADOS (60s) ---
 if "last_data_update" not in st.session_state:
     st.session_state.last_data_update = datetime.now()
     atualizar_dados = True
 else:
-    atualizar_dados = (datetime.now() - st.session_state.last_data_update).seconds >= 60
+    atualizar_dados = (datetime.now() - st.session_state.last_data_update).total_seconds() >= 60
 
 if atualizar_dados:
-    datas_disponiveis = gerar_dias_uteis()
-    
     st.session_state.last_data_update = datetime.now()
     
     with st.spinner(""):
@@ -383,8 +382,8 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 # Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
-with c_tit:
-    
+@st.fragment(run_every="1s")
+def render_clock():
     now = datetime.now(pytz.timezone("America/Sao_Paulo"))
 
     st.markdown(f"""
@@ -395,6 +394,10 @@ with c_tit:
         </span>
     </h1>
     """, unsafe_allow_html=True)
+
+with c_tit:
+    
+    render_clock()
 
     # st.markdown("""
     # <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>

@@ -373,7 +373,7 @@ with c_tit:
     """, unsafe_allow_html=True)
 
 with c_fd1:
-    with st.popover("📅 Período", use_container_width=True):
+    with st.popover("📅 Período", width='stretch'):
         start_date = st.selectbox(
             "📅 Início",
             options=datas_disponiveis,
@@ -423,7 +423,7 @@ verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
 vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 
 # --- RELÓGIO JS ---
-st.iframe("""
+components.html("""
 <script>
 function updateClock() {
     const now = new Date();
@@ -446,7 +446,7 @@ updateClock();
 """, height=0)
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
-st.iframe("""
+components.html("""
 <script>
 function resizeChartsForMobile() {
     setTimeout(function() {

@@ -191,7 +191,7 @@ def render_backtest(start_dt, end_dt):
             st.markdown("<p style='color: #94A3B8; font-size: 14px;'>Histórico Diário</p>", unsafe_allow_html=True)
             st.dataframe(
                 df_leilao,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=400
             )

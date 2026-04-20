@@ -194,39 +194,6 @@ div[data-testid="stVerticalBlock"] {
     padding-bottom: 0 !important;
 }
 
-/* Botões das abas - Estilizados */
-.tab-buttons-container {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.tab-button {
-    flex: 1;
-    min-width: 120px;
-    padding: 0.75rem 1rem;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background-color: #1E293B;
-    color: #94A3B8;
-}
-
-.tab-button.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.tab-button:hover:not(.active) {
-    background-color: #334155;
-    color: #F1F5F9;
-}
-
 /* Títulos responsivos */
 .modern-title {
     font-size: clamp(1rem, 4vw, 2rem) !important;
@@ -356,6 +323,56 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
     .stColumns > div:nth-child(3) { min-width: 65px !important; }
     .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
+
+/* CSS PARA TRANSFORMAR RADIO EM ABAS */
+div[data-testid="stRadio"] > div {
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+div[data-testid="stRadio"] > div > label {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
+    background: transparent !important;
+    border-bottom: 2px solid transparent;
+}
+
+div[data-testid="stRadio"] > div > label:hover {
+    background: transparent !important;
+    border-bottom-color: rgba(255, 75, 75, 0.3);
+}
+
+div[data-testid="stRadio"] > div > label > div:first-child {
+    display: none;
+}
+
+div[data-testid="stRadio"] > div > label > div:last-child {
+    color: #9E9E9E;
+    font-weight: 500;
+}
+
+div[data-testid="stRadio"] > div > label[data-testid="stMarkdownContainer"] {
+    color: #9E9E9E;
+}
+
+/* Estilo para o item selecionado */
+div[data-testid="stRadio"] > div > label[aria-checked="true"] > div:last-child {
+    color: #FF4B4B !important;
+}
+
+div[data-testid="stRadio"] > div > label[aria-checked="true"] {
+    border-bottom-color: #FF4B4B !important;
+}
+
+@media (max-width: 768px) {
+    div[data-testid="stRadio"] > div > label {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -454,112 +471,6 @@ if atualizar_dados:
 else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
-    
-# --- CONTROLE DE ABA ATIVA (SOLUÇÃO 2 - ESTILO ORIGINAL) ---
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "Gráfico"
-
-# --- CRIAR ABAS NO ESTILO ORIGINAL STREAMLIT ---
-st.markdown("""
-<style>
-/* Estilo das abas similar ao original do Streamlit */
-.original-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid #3E3E3E;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-}
-
-.original-tab {
-    padding: 0.5rem 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #9E9E9E;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.original-tab:hover {
-    color: #E0E0E0;
-    border-bottom-color: #666;
-}
-
-.original-tab.active {
-    color: #FFFFFF;
-    border-bottom-color: #FF4B4B;
-}
-
-/* Responsivo para mobile */
-@media (max-width: 768px) {
-    .original-tab {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .original-tab {
-        padding: 0.35rem 0.6rem;
-        font-size: 0.75rem;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-# --- CONTROLE DE ABA ATIVA (SEM BOTÕES - PILLS) ---
-if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "Gráfico"
-
-# Mapeamento dos nomes
-tab_options = {
-    "📈 Gráfico": "Gráfico",
-    "🎯 Backtest de Correlação": "Backtest",
-    "🔥 Mapa de Calor Abertura": "Mapa de Calor"
-}
-
-# CSS para pills
-st.markdown("""
-<style>
-/* Estiliza os pills para parecerem abas */
-div[data-testid="stPills"] {
-    gap: 0;
-    border-bottom: 1px solid #3E3E3E;
-    margin-bottom: 1.5rem;
-}
-
-div[data-testid="stPills"] button {
-    padding: 0.5rem 1.2rem;
-    margin: 0;
-    border-radius: 0;
-    background: transparent !important;
-    border-bottom: 2px solid transparent;
-    color: #9E9E9E;
-}
-
-div[data-testid="stPills"] button[aria-selected="true"] {
-    color: #FF4B4B !important;
-    border-bottom-color: #FF4B4B !important;
-    background: transparent !important;
-}
-
-div[data-testid="stPills"] button:hover {
-    background: transparent !important;
-    border-bottom-color: rgba(255, 75, 75, 0.3);
-}
-
-@media (max-width: 768px) {
-    div[data-testid="stPills"] button {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
 
 # --- CONTROLE DE ABA ATIVA (SEM BOTÕES - SELECTBOX) ---
 if "active_tab" not in st.session_state:

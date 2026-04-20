@@ -23,10 +23,6 @@ from helpers import (
     gerar_dias_uteis, ultimo_candle_real, fetch_di_variacao, checar_e_enviar_alerta_di
 )
 
-def update_clock():
-    now = datetime.now(pytz.timezone('America/Sao_Paulo'))
-    time_str = now.strftime("| %H:%M:%S")
-    return time_str
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -370,10 +366,10 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown(f"""
+    st.markdown("""
     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
-        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>{update_clock()}</span>
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
     </h1>
     """, unsafe_allow_html=True)
 
@@ -456,8 +452,70 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # """
 # st.markdown(clock_js, unsafe_allow_html=True)
 
-
-#
+# --- RELÓGIO DIGITAL COM JAVASCRIPT ROBUSTO ---
+clock_js = """
+<script>
+(function() {
+    // Função para encontrar o elemento do relógio
+    function findClockElement() {
+        // Tenta encontrar em diferentes contextos
+        let element = document.getElementById('digital-clock');
+        if (element) return element;
+        
+        element = document.querySelector('#digital-clock');
+        if (element) return element;
+        
+        // Procura no shadow DOM do Streamlit
+        const mainElement = document.querySelector('main');
+        if (mainElement && mainElement.shadowRoot) {
+            element = mainElement.shadowRoot.querySelector('#digital-clock');
+            if (element) return element;
+        }
+        
+        // Procura em iframes
+        const iframes = document.querySelectorAll('iframe');
+        for (let i = 0; i < iframes.length; i++) {
+            try {
+                const iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow.document;
+                element = iframeDoc.getElementById('digital-clock');
+                if (element) return element;
+            } catch(e) {}
+        }
+        
+        return null;
+    }
+    
+    function updateClock() {
+        const now = new Date();
+        const options = {
+            timeZone: 'America/Sao_Paulo',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        const timeString = now.toLocaleTimeString('pt-BR', options);
+        
+        const clockElement = findClockElement();
+        if (clockElement) {
+            clockElement.innerText = '| ' + timeString;
+        }
+    }
+    
+    // Tenta atualizar imediatamente
+    updateClock();
+    
+    // Atualiza a cada segundo
+    setInterval(updateClock, 1000);
+    
+    // Também tenta novamente após o DOM carregar completamente
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateClock);
+    }
+})();
+</script>
+"""
+st.markdown(clock_js, unsafe_allow_html=True)
 
 
 

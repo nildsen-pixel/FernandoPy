@@ -25,21 +25,6 @@ from helpers import (
 )
 
 
-@st.fragment(run_every="1s")
-def render_clock():
-    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
-
-    st.markdown(f"""
-    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-        TREND AXIS
-        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
-            | {now.strftime("%H:%M:%S")}
-        </span>
-    </h1>
-    """, unsafe_allow_html=True)
-
-
-
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Trend Axis WDO",
@@ -397,16 +382,22 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 # Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
+@st.fragment(run_every="1s")
+def render_clock():
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+
+    st.markdown(f"""
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+        TREND AXIS
+        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
+            | {now.strftime("%H:%M:%S")}
+        </span>
+    </h1>
+    """, unsafe_allow_html=True)
 
 with c_tit:
-
-    col1, col2 = st.columns([3,1])
-
-    with col1:
-        st.markdown("<h1 class='modern-title'>TREND AXIS</h1>", unsafe_allow_html=True)
-
-    with col2:
-        st.iframe("clock.html", height=30)
+    
+    render_clock()
 
 
 with c_fd1:

@@ -488,9 +488,8 @@ updateClock();
 """, height=0)
 
 
-# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---
-# Usando st.markdown com JavaScript em vez de components.html
-mobile_resize_js = """
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
+components.html("""
 <script>
 function resizeChartsForMobile() {
     setTimeout(function() {
@@ -537,8 +536,7 @@ var observer = new MutationObserver(function(mutations) {
 });
 observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
-"""
-st.markdown(mobile_resize_js, unsafe_allow_html=True)
+""", height=0)
 
 # --- ABAS ---
 tab1, tab2, tab3 = st.tabs(["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"])

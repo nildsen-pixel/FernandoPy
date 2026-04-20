@@ -23,6 +23,11 @@ from helpers import (
     gerar_dias_uteis, ultimo_candle_real, fetch_di_variacao, checar_e_enviar_alerta_di
 )
 
+def update_clock():
+    now = datetime.now(pytz.timezone('America/Sao_Paulo'))
+    time_str = now.strftime("| %H:%M:%S")
+    return time_str
+
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Trend Axis WDO",
@@ -365,10 +370,10 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown("""
+    st.markdown(f"""
     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
-        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>{update_clock()}</span>
     </h1>
     """, unsafe_allow_html=True)
 
@@ -452,24 +457,13 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # st.markdown(clock_js, unsafe_allow_html=True)
 
 
-# --- RELÓGIO DIGITAL COM PYTHON (SEM JS) ---
-clock_placeholder = st.empty()
+#
 
-# Atualiza o relógio a cada segundo usando rerun
-import time as time_module
 
-def update_clock():
-    now = datetime.now(pytz.timezone('America/Sao_Paulo'))
-    time_str = now.strftime("| %H:%M:%S")
-    return time_str
 
-# Usar st_autorefresh já existe, então podemos atualizar o relógio junto
-clock_placeholder.markdown(f"""
-<h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-    TREND AXIS
-    <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>{update_clock()}</span>
-</h1>
-""", unsafe_allow_html=True)
+
+
+
 
 
 

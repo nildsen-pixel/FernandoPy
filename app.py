@@ -422,8 +422,13 @@ if start_dt > end_dt:
 verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
 vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 
-# --- RELÓGIO JS ---
-components.html("""
+# --- RELÓGIO JS (SUBSTITUÍDO st.components.v1.html POR st.iframe) ---
+# NOTA: st.iframe não executa JavaScript diretamente como st.components.v1.html.
+# Para manter a funcionalidade do relógio, vamos usar st.markdown com JavaScript inline
+# ou manter components.html com warning até a data limite.
+
+# SOLUÇÃO 1: Usar st.markdown com JavaScript (RECOMENDADO)
+clock_js = """
 <script>
 function updateClock() {
     const now = new Date();
@@ -443,10 +448,18 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 </script>
-""", height=0)
+"""
+st.markdown(clock_js, unsafe_allow_html=True)
 
-# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
-components.html("""
+# SOLUÇÃO 2 (Alternativa): Se precisar de iframe, crie um arquivo HTML externo
+# com o código do relógio e use st.iframe("clock.html", height=0)
+
+# SOLUÇÃO 3 (Temporária): Manter components.html com suppress_deprecation_warning
+# components.html(clock_js, height=0)
+
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---
+# Usando st.markdown com JavaScript em vez de components.html
+mobile_resize_js = """
 <script>
 function resizeChartsForMobile() {
     setTimeout(function() {
@@ -493,7 +506,8 @@ var observer = new MutationObserver(function(mutations) {
 });
 observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
-""", height=0)
+"""
+st.markdown(mobile_resize_js, unsafe_allow_html=True)
 
 # --- ABAS ---
 tab1, tab2, tab3 = st.tabs(["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"])

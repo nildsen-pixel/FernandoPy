@@ -472,57 +472,78 @@ else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
 
-# --- CONTROLE DE ABA ATIVA (SEM BOTÕES - SELECTBOX) ---
+# --- CONTROLE DE ABA ATIVA (SEM BOTÕES - PILLS) ---
 if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "📈 Gráfico"
+    st.session_state.active_tab = "Gráfico"
 
-# CSS para estilizar o selectbox
+# Mapeamento dos nomes
+tab_options = {
+    "📈 Gráfico": "Gráfico",
+    "🎯 Backtest de Correlação": "Backtest",
+    "🔥 Mapa de Calor Abertura": "Mapa de Calor"
+}
+
+# CSS para pills
 st.markdown("""
 <style>
-/* Estiliza o selectbox para parecer mais elegante */
-div[data-testid="stSelectbox"] label {
-    display: none;
+/* Estiliza os pills para parecerem abas */
+div[data-testid="stPills"] {
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1.5rem;
 }
 
-div[data-testid="stSelectbox"] {
-    margin-bottom: 1rem;
+div[data-testid="stPills"] button {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
+    background: transparent !important;
+    border-bottom: 2px solid transparent;
+    color: #9E9E9E;
 }
 
-div[data-testid="stSelectbox"] > div {
-    background-color: transparent;
+div[data-testid="stPills"] button[aria-selected="true"] {
+    color: #FF4B4B !important;
+    border-bottom-color: #FF4B4B !important;
+    background: transparent !important;
 }
 
-/* Para mobile */
+div[data-testid="stPills"] button:hover {
+    background: transparent !important;
+    border-bottom-color: rgba(255, 75, 75, 0.3);
+}
+
 @media (max-width: 768px) {
-    div[data-testid="stSelectbox"] {
-        margin-bottom: 0.8rem;
+    div[data-testid="stPills"] button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
     }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Criar coluna centralizada para o selectbox (opcional)
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    aba_selecionada = st.selectbox(
-        "Navegação:",
-        ["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"],
-        label_visibility="collapsed",
-        index=["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"].index(st.session_state.active_tab)
-    )
+# Usar pills (requer Streamlit >= 1.30)
+aba_selecionada_display = st.pills(
+    "Selecione:",
+    options=list(tab_options.keys()),
+    selection_mode="single",
+    default=[k for k, v in tab_options.items() if v == st.session_state.active_tab][0],
+    label_visibility="collapsed"
+)
 
 # Atualiza session_state
-st.session_state.active_tab = aba_selecionada
+if aba_selecionada_display:
+    st.session_state.active_tab = tab_options[aba_selecionada_display[0]]
 
-# Linha divisória sutil
+# Linha divisória
 st.markdown('<hr style="margin: 0 0 1.5rem 0; opacity: 0.2;">', unsafe_allow_html=True)
 
 # --- RENDERIZAR APENAS A ABA SELECIONADA ---
-if st.session_state.active_tab == "📈 Gráfico":
+if st.session_state.active_tab == "Gráfico":
     render_grafico(start_dt, end_dt, placeholder_dados)
-elif st.session_state.active_tab == "🎯 Backtest de Correlação":
+elif st.session_state.active_tab == "Backtest":
     render_backtest(start_dt, end_dt)
-elif st.session_state.active_tab == "🔥 Mapa de Calor Abertura":
+elif st.session_state.active_tab == "Mapa de Calor":
     render_heatmap(start_dt, end_dt)
 
 # --- RELÓGIO JS ---

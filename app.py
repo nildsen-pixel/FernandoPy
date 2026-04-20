@@ -462,6 +462,28 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # """
 # st.markdown(clock_js, unsafe_allow_html=True)
 
+placeholder_clock = st.empty()
+
+def atualizar_clock():
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+    return now.strftime("| %H:%M:%S")
+
+# Atualiza o HTML do título com o horário atual
+placeholder_clock.markdown(f"""
+<script>
+const clockElement = window.parent.document.getElementById('digital-clock');
+if (clockElement) {{
+    clockElement.innerText = '{atualizar_clock()}';
+}}
+</script>
+""", unsafe_allow_html=True)
+
+
+
+
+
+
+
 
 
 # SOLUÇÃO 2 (Alternativa): Se precisar de iframe, crie um arquivo HTML externo

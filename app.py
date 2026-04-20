@@ -396,13 +396,17 @@ c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 #     """, unsafe_allow_html=True)
 
 with c_tit:
-    
-    st.markdown("""
-    <div style="display:flex; align-items:center; gap:10px;">
-        <h1 class='modern-title' style="margin:0;">TREND AXIS</h1>
-        <iframe src="clock.html" style="border:none;height:25px;width:90px;"></iframe>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2 = st.columns([3,1])
+
+    with col1:
+        st.markdown("""
+        <h1 class='modern-title'>
+            TREND AXIS
+        </h1>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        components.iframe("clock.html", height=35)
 
 
 with c_fd1:

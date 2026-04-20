@@ -222,7 +222,7 @@ div[data-testid="stVerticalBlock"] {
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) ---
+# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) E ABAS COM CORES IGUAIS AO PERÍODO ---
 st.markdown("""
 <style>
 /* Fixa o layout das colunas */
@@ -324,7 +324,10 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
     .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
 
-/* CSS PARA ESTILIZAR OS PILLS COMO ABAS - COM CORES IGUAIS AO OBJETO PERÍODO */
+/* ============================================ */
+/* CSS PARA ESTILIZAR OS PILLS COMO ABAS       */
+/* CORES IGUAIS AO OBJETO PERÍODO              */
+/* ============================================ */
 div[data-testid="stPills"] {
     gap: 0;
     border-bottom: 1px solid #3E3E3E;
@@ -336,28 +339,31 @@ div[data-testid="stPills"] button {
     padding: 0.5rem 1.2rem;
     margin: 0;
     border-radius: 0;
-    background-color: #1E293B !important;
+    background-color: #1E293B !important;  /* MESMA COR DO FUNDO DO BOTÃO PERÍODO */
     border-bottom: 2px solid transparent;
-    color: #94A3B8 !important;
+    color: #94A3B8 !important;  /* MESMA COR DO TEXTO DO BOTÃO PERÍODO */
     font-weight: 500;
     transition: all 0.2s ease;
 }
 
+/* HOVER - quando o mouse passa por cima */
 div[data-testid="stPills"] button:hover {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
+    background-color: #FFFFFF !important;  /* FUNDO BRANCO */
+    color: #1E293B !important;  /* TEXTO ESCURO */
     border-bottom-color: transparent;
 }
 
+/* ABA ATIVA (selecionada) */
 div[data-testid="stPills"] button[aria-selected="true"] {
     color: #FF4B4B !important;
     border-bottom-color: #FF4B4B !important;
     background-color: #1E293B !important;
 }
 
+/* HOVER na aba ativa */
 div[data-testid="stPills"] button[aria-selected="true"]:hover {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
+    background-color: #FFFFFF !important;  /* FUNDO BRANCO */
+    color: #1E293B !important;  /* TEXTO ESCURO */
 }
 
 @media (max-width: 768px) {

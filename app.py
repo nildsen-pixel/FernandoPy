@@ -428,28 +428,50 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # ou manter components.html com warning até a data limite.
 
 # SOLUÇÃO 1: Usar st.markdown com JavaScript (RECOMENDADO)
-clock_js = """
-<script>
-function updateClock() {
-    const now = new Date();
-    const options = {
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-    const timeString = now.toLocaleTimeString('pt-BR', options);
-    const clockElement = window.parent.document.querySelector('#digital-clock');
-    if (clockElement) {
-        clockElement.innerText = '| ' + timeString;
-    }
-}
-setInterval(updateClock, 1000);
-updateClock();
-</script>
-"""
-st.markdown(clock_js, unsafe_allow_html=True)
+# clock_js = """
+# <script>
+# function updateClock() {
+#     const now = new Date();
+#     const options = {
+#         timeZone: 'America/Sao_Paulo',
+#         hour: '2-digit',
+#         minute: '2-digit',
+#         second: '2-digit',
+#         hour12: false
+#     };
+#     const timeString = now.toLocaleTimeString('pt-BR', options);
+#     const clockElement = window.parent.document.querySelector('#digital-clock');
+#     if (clockElement) {
+#         clockElement.innerText = '| ' + timeString;
+#     }
+# }
+# setInterval(updateClock, 1000);
+# updateClock();
+# </script>
+# """
+# st.markdown(clock_js, unsafe_allow_html=True)
+
+
+# --- RELÓGIO DIGITAL COM PYTHON (SEM JS) ---
+clock_placeholder = st.empty()
+
+# Atualiza o relógio a cada segundo usando rerun
+import time as time_module
+
+def update_clock():
+    now = datetime.now(pytz.timezone('America/Sao_Paulo'))
+    time_str = now.strftime("| %H:%M:%S")
+    return time_str
+
+# Usar st_autorefresh já existe, então podemos atualizar o relógio junto
+clock_placeholder.markdown(f"""
+<h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+    TREND AXIS
+    <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>{update_clock()}</span>
+</h1>
+""", unsafe_allow_html=True)
+
+
 
 # SOLUÇÃO 2 (Alternativa): Se precisar de iframe, crie um arquivo HTML externo
 # com o código do relógio e use st.iframe("clock.html", height=0)

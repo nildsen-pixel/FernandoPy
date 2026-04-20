@@ -423,7 +423,7 @@ verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
 vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 
 # --- RELÓGIO JS ---
-components.html("""
+st.iframe("""
 <script>
 function updateClock() {
     const now = new Date();
@@ -446,7 +446,7 @@ updateClock();
 """, height=0)
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
-components.html("""
+st.iframe("""
 <script>
 function resizeChartsForMobile() {
     setTimeout(function() {

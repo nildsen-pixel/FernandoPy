@@ -370,9 +370,9 @@ with c_tit:
     now = datetime.now(pytz.timezone("America/Sao_Paulo"))
 
     st.markdown(f"""
-    <h1 class='modern-title'>
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
-        <span class='title-date'>| {now.strftime("%H:%M:%S")}</span>
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| {now.strftime("%H:%M:%S")}</span>
     </h1>
     """, unsafe_allow_html=True)
 
@@ -461,28 +461,6 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # </script>
 # """
 # st.markdown(clock_js, unsafe_allow_html=True)
-
-placeholder_clock = st.empty()
-
-def atualizar_clock():
-    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
-    return now.strftime("| %H:%M:%S")
-
-# Atualiza o HTML do título com o horário atual
-placeholder_clock.markdown(f"""
-<script>
-const clockElement = window.parent.document.getElementById('digital-clock');
-if (clockElement) {{
-    clockElement.innerText = '{atualizar_clock()}';
-}}
-</script>
-""", unsafe_allow_html=True)
-
-
-
-
-
-
 
 
 

@@ -324,31 +324,40 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
     .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
 
-/* CSS PARA ESTILIZAR OS PILLS COMO ABAS */
+/* CSS PARA ESTILIZAR OS PILLS COMO ABAS - COM CORES IGUAIS AO OBJETO PERÍODO */
 div[data-testid="stPills"] {
     gap: 0;
     border-bottom: 1px solid #3E3E3E;
     margin-bottom: 1.5rem;
+    background-color: transparent;
 }
 
 div[data-testid="stPills"] button {
     padding: 0.5rem 1.2rem;
     margin: 0;
     border-radius: 0;
-    background: transparent !important;
+    background-color: #1E293B !important;
     border-bottom: 2px solid transparent;
-    color: #9E9E9E;
+    color: #94A3B8 !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+div[data-testid="stPills"] button:hover {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border-bottom-color: transparent;
 }
 
 div[data-testid="stPills"] button[aria-selected="true"] {
     color: #FF4B4B !important;
     border-bottom-color: #FF4B4B !important;
-    background: transparent !important;
+    background-color: #1E293B !important;
 }
 
-div[data-testid="stPills"] button:hover {
-    background: transparent !important;
-    border-bottom-color: rgba(255, 75, 75, 0.3);
+div[data-testid="stPills"] button[aria-selected="true"]:hover {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
 }
 
 @media (max-width: 768px) {
@@ -468,7 +477,6 @@ if st.session_state.active_tab not in opcoes_abas:
     st.session_state.active_tab = opcoes_abas[0]
 
 # Usar pills (requer Streamlit >= 1.30)
-# O st.pills retorna o valor selecionado diretamente quando selection_mode="single"
 aba_selecionada = st.pills(
     "Selecione a aba:",
     options=opcoes_abas,

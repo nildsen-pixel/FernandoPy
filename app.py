@@ -561,28 +561,57 @@ div[data-testid="stPills"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# Usar pills (requer Streamlit >= 1.30)
-aba_selecionada_display = st.pills(
-    "Selecione:",
-    options=list(tab_options.keys()),
-    selection_mode="single",
-    default=[k for k, v in tab_options.items() if v == st.session_state.active_tab][0],
-    label_visibility="collapsed"
-)
+# --- CONTROLE DE ABA ATIVA (SEM BOTÕES - SELECTBOX) ---
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "📈 Gráfico"
+
+# CSS para estilizar o selectbox
+st.markdown("""
+<style>
+/* Estiliza o selectbox para parecer mais elegante */
+div[data-testid="stSelectbox"] label {
+    display: none;
+}
+
+div[data-testid="stSelectbox"] {
+    margin-bottom: 1rem;
+}
+
+div[data-testid="stSelectbox"] > div {
+    background-color: transparent;
+}
+
+/* Para mobile */
+@media (max-width: 768px) {
+    div[data-testid="stSelectbox"] {
+        margin-bottom: 0.8rem;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Criar coluna centralizada para o selectbox (opcional)
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    aba_selecionada = st.selectbox(
+        "Navegação:",
+        ["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"],
+        label_visibility="collapsed",
+        index=["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"].index(st.session_state.active_tab)
+    )
 
 # Atualiza session_state
-if aba_selecionada_display:
-    st.session_state.active_tab = tab_options[aba_selecionada_display[0]]
+st.session_state.active_tab = aba_selecionada
 
-# Linha divisória
+# Linha divisória sutil
 st.markdown('<hr style="margin: 0 0 1.5rem 0; opacity: 0.2;">', unsafe_allow_html=True)
 
 # --- RENDERIZAR APENAS A ABA SELECIONADA ---
-if st.session_state.active_tab == "Gráfico":
+if st.session_state.active_tab == "📈 Gráfico":
     render_grafico(start_dt, end_dt, placeholder_dados)
-elif st.session_state.active_tab == "Backtest":
+elif st.session_state.active_tab == "🎯 Backtest de Correlação":
     render_backtest(start_dt, end_dt)
-elif st.session_state.active_tab == "Mapa de Calor":
+elif st.session_state.active_tab == "🔥 Mapa de Calor Abertura":
     render_heatmap(start_dt, end_dt)
 
 # --- RELÓGIO JS ---

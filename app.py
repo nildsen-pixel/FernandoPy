@@ -139,7 +139,7 @@ header {
 @media (min-width: 1024px) {
     .stPlotlyChart,
     .stPlotlyChart > div {
-        min-height: calc(100vh - 250px) !important;
+        min-height: calc(100vh - 300px) !important;
     }
 }
 
@@ -147,7 +147,7 @@ header {
 @media (min-width: 768px) and (max-width: 1023px) {
     .stPlotlyChart,
     .stPlotlyChart > div {
-        min-height: calc(100vh - 220px) !important;
+        min-height: calc(100vh - 280px) !important;
     }
 }
 
@@ -155,9 +155,9 @@ header {
 @media (max-width: 767px) {
     .stPlotlyChart,
     .stPlotlyChart > div {
-        min-height: calc(100vh - 160px) !important;
-        height: calc(100vh - 160px) !important;
-        max-height: calc(100vh - 160px) !important;
+        min-height: calc(100vh - 220px) !important;
+        height: calc(100vh - 220px) !important;
+        max-height: calc(100vh - 220px) !important;
     }
     
     /* Força o container a não ter scroll */
@@ -171,9 +171,9 @@ header {
 @media (max-width: 480px) {
     .stPlotlyChart,
     .stPlotlyChart > div {
-        min-height: calc(100vh - 140px) !important;
-        height: calc(100vh - 140px) !important;
-        max-height: calc(100vh - 140px) !important;
+        min-height: calc(100vh - 200px) !important;
+        height: calc(100vh - 200px) !important;
+        max-height: calc(100vh - 200px) !important;
     }
 }
 
@@ -194,29 +194,37 @@ div[data-testid="stVerticalBlock"] {
     padding-bottom: 0 !important;
 }
 
-/* Tabs otimizadas para mobile */
-.stTabs {
-    margin-top: 0 !important;
-    flex-shrink: 0 !important;
+/* Botões das abas - Estilizados */
+.tab-buttons-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
-.stTabs [data-baseweb="tab-list"] {
-    flex-wrap: wrap !important;
-    gap: 5px !important;
-    background-color: transparent !important;
+.tab-button {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #1E293B;
+    color: #94A3B8;
 }
 
-.stTabs [data-baseweb="tab"] {
-    padding: 6px 10px !important;
-    font-size: 12px !important;
+.tab-button.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.stTabs [data-baseweb="tab-panel"] {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0 !important;
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
+.tab-button:hover:not(.active) {
+    background-color: #334155;
+    color: #F1F5F9;
 }
 
 /* Títulos responsivos */
@@ -382,29 +390,13 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 # Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
-# @st.fragment(run_every="1s")
-# def render_clock():
-#     now = datetime.now(pytz.timezone("America/Sao_Paulo"))
-
-#     st.markdown(f"""
-#     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-#         TREND AXIS
-#         <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
-#             | {now.strftime("%H:%M:%S")}
-#         </span>
-#     </h1>
-#     """, unsafe_allow_html=True)
-
 with c_tit:
-    
     st.markdown("""
     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
         <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
     </h1>
     """, unsafe_allow_html=True)
-    
-    
 
 with c_fd1:
     with st.popover("📅 Período", width='stretch'):
@@ -463,6 +455,45 @@ else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
+# --- CONTROLE DE ABA ATIVA (SOLUÇÃO 2) ---
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "Gráfico"
+
+# --- CRIAR BOTÕES DE NAVEGAÇÃO ESTILIZADOS ---
+st.markdown('<div class="tab-buttons-container">', unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    if st.button("📈 Gráfico", use_container_width=True, 
+                 type="primary" if st.session_state.active_tab == "Gráfico" else "secondary"):
+        st.session_state.active_tab = "Gráfico"
+        st.rerun()
+
+with col2:
+    if st.button("🎯 Backtest de Correlação", use_container_width=True,
+                 type="primary" if st.session_state.active_tab == "Backtest" else "secondary"):
+        st.session_state.active_tab = "Backtest"
+        st.rerun()
+
+with col3:
+    if st.button("🔥 Mapa de Calor Abertura", use_container_width=True,
+                 type="primary" if st.session_state.active_tab == "Mapa de Calor" else "secondary"):
+        st.session_state.active_tab = "Mapa de Calor"
+        st.rerun()
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# --- LINHA DIVISÓRIA ---
+st.divider()
+
+# --- RENDERIZAR APENAS A ABA SELECIONADA ---
+if st.session_state.active_tab == "Gráfico":
+    render_grafico(start_dt, end_dt, placeholder_dados)
+elif st.session_state.active_tab == "Backtest":
+    render_backtest(start_dt, end_dt)
+elif st.session_state.active_tab == "Mapa de Calor":
+    render_heatmap(start_dt, end_dt)
 
 # --- RELÓGIO JS ---
 components.html("""
@@ -487,7 +518,6 @@ updateClock();
 </script>
 """, height=0)
 
-
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
 components.html("""
 <script>
@@ -498,7 +528,7 @@ function resizeChartsForMobile() {
         var windowHeight = window.innerHeight;
         
         // Calcula altura disponível baseado no dispositivo
-        var headerHeight = isMobile ? 140 : 250;
+        var headerHeight = isMobile ? 180 : 300;
         var newHeight = windowHeight - headerHeight;
         
         charts.forEach(function(chart) {
@@ -530,25 +560,13 @@ window.addEventListener('resize', function() {
     setTimeout(resizeChartsForMobile, 150);
 });
 
-// Força redimensionamento quando as abas mudam
+// Força redimensionamento quando a aba muda
 var observer = new MutationObserver(function(mutations) {
     resizeChartsForMobile();
 });
 observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
 """, height=0)
-
-# --- ABAS ---
-tab1, tab2, tab3 = st.tabs(["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"])
-
-with tab1:
-    render_grafico(start_dt, end_dt, placeholder_dados)
-
-with tab2:
-    render_backtest(start_dt, end_dt)
-
-with tab3:
-    render_heatmap(start_dt, end_dt)
 
 # Função principal
 def main():

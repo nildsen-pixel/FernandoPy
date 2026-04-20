@@ -222,7 +222,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False, font_size=14, font_color="#94A3B8"
         )
         fig_placeholder.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_placeholder, width='stretch')
+        st.plotly_chart(fig_placeholder, use_container_width=True)
         return
 
     # --- TRUNCAGEM INTELIGENTE (usa cache para último candle) ---
@@ -533,7 +533,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     st.plotly_chart(
         fig,
-        width='stretch',
+        use_container_width=True,
         theme=None,
         config={
             'displayModeBar': False,

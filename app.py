@@ -452,70 +452,21 @@ vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 # """
 # st.markdown(clock_js, unsafe_allow_html=True)
 
-# --- RELÓGIO DIGITAL COM JAVASCRIPT ROBUSTO ---
-clock_js = """
+placeholder_clock = st.empty()
+
+def atualizar_clock():
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+    return now.strftime("| %H:%M:%S")
+
+# Atualiza o HTML do título com o horário atual
+placeholder_clock.markdown(f"""
 <script>
-(function() {
-    // Função para encontrar o elemento do relógio
-    function findClockElement() {
-        // Tenta encontrar em diferentes contextos
-        let element = document.getElementById('digital-clock');
-        if (element) return element;
-        
-        element = document.querySelector('#digital-clock');
-        if (element) return element;
-        
-        // Procura no shadow DOM do Streamlit
-        const mainElement = document.querySelector('main');
-        if (mainElement && mainElement.shadowRoot) {
-            element = mainElement.shadowRoot.querySelector('#digital-clock');
-            if (element) return element;
-        }
-        
-        // Procura em iframes
-        const iframes = document.querySelectorAll('iframe');
-        for (let i = 0; i < iframes.length; i++) {
-            try {
-                const iframeDoc = iframes[i].contentDocument || iframes[i].contentWindow.document;
-                element = iframeDoc.getElementById('digital-clock');
-                if (element) return element;
-            } catch(e) {}
-        }
-        
-        return null;
-    }
-    
-    function updateClock() {
-        const now = new Date();
-        const options = {
-            timeZone: 'America/Sao_Paulo',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        };
-        const timeString = now.toLocaleTimeString('pt-BR', options);
-        
-        const clockElement = findClockElement();
-        if (clockElement) {
-            clockElement.innerText = '| ' + timeString;
-        }
-    }
-    
-    // Tenta atualizar imediatamente
-    updateClock();
-    
-    // Atualiza a cada segundo
-    setInterval(updateClock, 1000);
-    
-    // Também tenta novamente após o DOM carregar completamente
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', updateClock);
-    }
-})();
+const clockElement = window.parent.document.getElementById('digital-clock');
+if (clockElement) {{
+    clockElement.innerText = '{atualizar_clock()}';
+}}
 </script>
-"""
-st.markdown(clock_js, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 
 

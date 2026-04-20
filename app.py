@@ -325,20 +325,18 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 }
 
 /* ============================================ */
-/* CSS PARA ESTILIZAR OS PILLS COMO ABAS       */
-/* CORES IGUAIS AO OBJETO PERÍODO              */
+/* ABORDAGEM MAIS ESPECÍFICA - USANDO st-emotion-cache */
 /* ============================================ */
 
-/* Container principal dos pills */
-div[data-testid="stPills"] {
+/* Container dos pills */
+div[class*="stPills"] {
     gap: 0 !important;
     border-bottom: 1px solid #3E3E3E !important;
     margin-bottom: 1.5rem !important;
-    background-color: transparent !important;
 }
 
-/* Cada botão/aba individual */
-div[data-testid="stPills"] button {
+/* Botões dos pills */
+button[class*="stPills"] {
     padding: 0.5rem 1.2rem !important;
     margin: 0 !important;
     border-radius: 0 !important;
@@ -346,36 +344,25 @@ div[data-testid="stPills"] button {
     border-bottom: 2px solid transparent !important;
     color: #94A3B8 !important;
     font-weight: 500 !important;
-    transition: all 0.2s ease !important;
 }
 
-/* HOVER - quando o mouse passa por cima (qualquer aba) */
-div[data-testid="stPills"] button:hover {
+/* Hover */
+button[class*="stPills"]:hover {
     background-color: #FFFFFF !important;
     color: #1E293B !important;
-    border-bottom-color: transparent !important;
 }
 
-/* ABA ATIVA (selecionada) */
-div[data-testid="stPills"] button[aria-selected="true"] {
+/* Botão selecionado */
+button[class*="stPills"][aria-selected="true"] {
     color: #FF4B4B !important;
     border-bottom-color: #FF4B4B !important;
     background-color: #1E293B !important;
 }
 
-/* HOVER na aba ativa */
-div[data-testid="stPills"] button[aria-selected="true"]:hover {
+/* Hover no botão selecionado */
+button[class*="stPills"][aria-selected="true"]:hover {
     background-color: #FFFFFF !important;
     color: #1E293B !important;
-    border-bottom-color: transparent !important;
-}
-
-/* Para mobile */
-@media (max-width: 768px) {
-    div[data-testid="stPills"] button {
-        padding: 0.4rem 0.8rem !important;
-        font-size: 0.85rem !important;
-    }
 }
 </style>
 """, unsafe_allow_html=True)

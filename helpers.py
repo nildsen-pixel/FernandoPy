@@ -350,7 +350,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
                 prev_close = float(scty_qtn.get("PrvsDayClsPric", 1))
                 if prev_close > 0:
                     pct_change = (var_pts / prev_close) * 100
-                    return round(pct_change, 2)
+                    #return round(pct_change, 2)
     except: pass
 
     try:
@@ -361,8 +361,8 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
             data = resp.json().get("data", [])
             if data and len(data[0].get("d", [])) > 0:
                 val = float(data[0]["d"][0])
-                if -15.0 <= val <= 15.0:
-                    return round(val, 2)
+                #if -15.0 <= val <= 15.0:
+                    #return round(val, 2)
     except: pass
 
     try:
@@ -372,7 +372,7 @@ def fetch_di_variacao(ticker_tv="BMFBOVESPA:DI1F2034", ticker_advfn="DI1F34"):
             match = re.search(r'title=\"Variação do valor\"[^>]*>.*?<b[^>]*>([+-]?[\d,\.]+)%</b>', resp.text, re.DOTALL)
             if match:
                 val = float(match.group(1).replace('.', '').replace(',', '.'))
-                return round(val, 2)
+                #return round(val, 2)
     except: pass
 
     try:

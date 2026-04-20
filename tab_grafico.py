@@ -322,7 +322,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     st.plotly_chart(
         fig,
-        use_container_width=True,
+        width='stretch',
         theme=None,
         config={
             'displayModeBar': False,

@@ -224,7 +224,7 @@ def render_backtest(start_dt, end_dt):
             df_resumo = pd.DataFrame(resumo_dados)
             st.dataframe(
                 df_resumo,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=400
             )

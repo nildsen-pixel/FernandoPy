@@ -43,6 +43,6 @@ def render_heatmap(start_dt, end_dt):
             yaxis_title="Data",
             coloraxis_colorbar=dict(title="Volatilidade (%)")
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     else:
         st.warning("Nenhum dado disponível para o mapa de calor.")

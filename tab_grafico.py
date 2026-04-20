@@ -38,7 +38,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False, font_size=14, font_color="#94A3B8"
         )
         fig_placeholder.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_placeholder, use_container_width=True)
+        st.plotly_chart(fig_placeholder, width='stretch')
         return  # Para aqui se sem dados
 
     agora_idx = pd.Timestamp(ultimo_candle_real())

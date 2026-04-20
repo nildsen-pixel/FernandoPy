@@ -151,7 +151,7 @@ def render_backtest(start_dt, end_dt):
         autosize=False
     )
     
-    st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
     
     c1, c2, c3 = st.columns(3)
     with c1:

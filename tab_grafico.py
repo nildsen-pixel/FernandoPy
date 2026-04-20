@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import time
+from functools import lru_cache
 
 # Imports dos helpers
 from helpers import (
@@ -10,15 +11,157 @@ from helpers import (
     fetch_di_variacao, gerar_dias_uteis
 )
 
-def render_grafico(start_dt, end_dt, placeholder_dados):
-    # --- PROCESSAMENTO DOS DADOS PARA O GRÁFICO (Variável pela Sidebar) ---
-    with st.spinner("Processando Inteligência de Gráfico..."):
-        verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
-        vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='alta') # <-- Mude para 'alta'
-        mxn_bruto, brl_bruto, mxn_ref, brl_ref = fetch_mxn_brl(start_dt, end_dt)
+# ==========================================
+# FUNÇÕES DE CACHE PARA DADOS HISTÓRICOS
+# ==========================================
 
-    # Verificação de dados após processamento (sem bloqueio, só warning se vazio)
-    if verde_count.empty or vermelha_count.empty or mxn_bruto.empty:
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache de 1 hora para dados históricos
+def get_historico_ativos_cache(tickers_tuple, start_dt_str, end_dt_str, modo):
+    """
+    Busca dados históricos de ativos com cache baseado nas strings das datas.
+    Isso garante que os dados do passado NUNCA mudem.
+    
+    Parâmetros:
+    - tickers_tuple: tupla de tickers (para ser hashable pelo cache)
+    - start_dt_str: string da data de início
+    - end_dt_str: string da data de fim
+    - modo: 'alta' ou 'baixa'
+    """
+    start_dt = pd.Timestamp(start_dt_str).tz_localize(BRT)
+    end_dt = pd.Timestamp(end_dt_str).tz_localize(BRT)
+    
+    # Converte tupla de volta para lista
+    tickers = list(tickers_tuple)
+    
+    # Busca os dados históricos
+    df = ativos(tickers, start_dt, end_dt, modo)
+    
+    # Retorna uma cópia para evitar modificações
+    return df.copy() if df is not None else df
+
+@st.cache_data(ttl=60, show_spinner=False)  # Cache curto para dados do dia atual
+def get_ativos_hoje_cache(tickers_tuple, modo):
+    """
+    Busca apenas dados de hoje (que podem ser atualizados a cada 60 segundos)
+    """
+    hoje = pd.Timestamp.now(tz=BRT).normalize()
+    amanha = hoje + pd.Timedelta(days=1)
+    
+    tickers = list(tickers_tuple)
+    df = ativos(tickers, hoje, amanha, modo)
+    return df.copy() if df is not None else df
+
+def get_ativos_com_cache(tickers, start_dt, end_dt, modo):
+    """
+    Combina dados históricos (cache longo) com dados atuais (cache curto)
+    """
+    hoje = pd.Timestamp.now(tz=BRT).normalize()
+    tickers_tuple = tuple(tickers)  # Converte para tupla (hashable)
+    
+    # Se o período é totalmente no passado (end_dt < hoje)
+    if end_dt < hoje:
+        return get_historico_ativos_cache(
+            tickers_tuple, 
+            str(start_dt), 
+            str(end_dt), 
+            modo
+        )
+    
+    # Se o período inclui hoje, separa histórico + hoje
+    if start_dt < hoje:
+        # Parte histórica (antes de hoje)
+        historico = get_historico_ativos_cache(
+            tickers_tuple,
+            str(start_dt),
+            str(hoje - pd.Timedelta(seconds=1)),
+            modo
+        )
+        
+        # Dados de hoje (atualizáveis)
+        hoje_df = get_ativos_hoje_cache(tickers_tuple, modo)
+        
+        # Combina os dados
+        if historico is not None and hoje_df is not None and not historico.empty and not hoje_df.empty:
+            return pd.concat([historico, hoje_df]).drop_duplicates().sort_index()
+        elif historico is not None and not historico.empty:
+            return historico
+        elif hoje_df is not None and not hoje_df.empty:
+            return hoje_df
+    
+    # Apenas dados de hoje
+    return get_ativos_hoje_cache(tickers_tuple, modo)
+
+@st.cache_data(ttl=30, show_spinner=False)  # Cache de 30 segundos para o último candle
+def get_ultimo_candle_cacheado():
+    """
+    Retorna o último candle real com cache curto.
+    Isso evita recálculos constantes durante o autorefresh.
+    """
+    return ultimo_candle_real()
+
+def get_ultimo_candle_para_periodo(end_dt):
+    """
+    Retorna o último candle apropriado para o período.
+    Para períodos passados, o valor é imutável (usa end_dt).
+    Para períodos atuais, o valor pode ser atualizado com cache.
+    """
+    agora = pd.Timestamp.now(tz=BRT)
+    
+    # Se o período termina antes de agora (dados históricos completos)
+    if end_dt < agora:
+        # Usa o fim do período como referência fixa
+        return end_dt
+    
+    # Se inclui o presente, usa o último candle real com cache
+    return get_ultimo_candle_cacheado()
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def processar_dados_historicos(start_dt_str, end_dt_str):
+    """
+    Processa APENAS dados históricos (imutáveis) do MXN/BRL
+    """
+    start_dt = pd.Timestamp(start_dt_str).tz_localize(BRT)
+    end_dt = pd.Timestamp(end_dt_str).tz_localize(BRT)
+    
+    # Busca dados do MXN/BRL com cache
+    mxn_bruto, brl_bruto, mxn_ref, brl_ref = fetch_mxn_brl(start_dt, end_dt)
+    
+    return {
+        'mxn_bruto': mxn_bruto,
+        'brl_bruto': brl_bruto,
+        'mxn_ref': mxn_ref,
+        'brl_ref': brl_ref
+    }
+
+
+# ==========================================
+# FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO
+# ==========================================
+
+def render_grafico(start_dt, end_dt, placeholder_dados):
+    """
+    Renderiza o gráfico com dados históricos imutáveis e dados atuais atualizáveis
+    """
+    
+    # Converte datas para string para usar como chave de cache
+    start_dt_str = str(start_dt)
+    end_dt_str = str(end_dt)
+    
+    # --- PROCESSAMENTO DOS DADOS COM CACHE ---
+    with st.spinner("Processando Inteligência de Gráfico..."):
+        # Dados históricos dos ativos (com cache inteligente)
+        verde_count = get_ativos_com_cache(VERDE_TICKERS, start_dt, end_dt, modo='alta')
+        vermelha_count = get_ativos_com_cache(VERMELHA_TICKERS, start_dt, end_dt, modo='alta')
+        
+        # Dados do MXN/BRL (históricos imutáveis)
+        dados_mxn = processar_dados_historicos(start_dt_str, end_dt_str)
+        mxn_bruto = dados_mxn['mxn_bruto']
+        brl_bruto = dados_mxn['brl_bruto']
+        mxn_ref = dados_mxn['mxn_ref']
+        brl_ref = dados_mxn['brl_ref']
+
+    # Verificação de dados após processamento
+    if verde_count is None or verde_count.empty or vermelha_count is None or vermelha_count.empty or mxn_bruto is None or mxn_bruto.empty:
         motivos = []
         hoje = pd.Timestamp.now(tz=BRT).date()
         if end_dt.date() > hoje:
@@ -39,16 +182,24 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         )
         fig_placeholder.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig_placeholder, width='stretch')
-        return  # Para aqui se sem dados
+        return
 
-    agora_idx = pd.Timestamp(ultimo_candle_real())
-    if end_dt > agora_idx:
-        verde_count = verde_count[verde_count.index <= agora_idx]
-        vermelha_count = vermelha_count[vermelha_count.index <= agora_idx]
-        mxn_bruto = mxn_bruto[mxn_bruto.index <= agora_idx]
-        brl_bruto = brl_bruto[brl_bruto.index <= agora_idx]
+    # --- TRUNCAGEM INTELIGENTE (usa cache para último candle) ---
+    agora_idx = get_ultimo_candle_para_periodo(end_dt)
+    
+    # Verifica se precisa truncar (apenas para dados do período atual)
+    if end_dt > agora_idx and isinstance(agora_idx, pd.Timestamp):
+        if verde_count is not None and not verde_count.empty:
+            verde_count = verde_count[verde_count.index <= agora_idx]
+        if vermelha_count is not None and not vermelha_count.empty:
+            vermelha_count = vermelha_count[vermelha_count.index <= agora_idx]
+        if mxn_bruto is not None and not mxn_bruto.empty:
+            mxn_bruto = mxn_bruto[mxn_bruto.index <= agora_idx]
+        if brl_bruto is not None and not brl_bruto.empty:
+            brl_bruto = brl_bruto[brl_bruto.index <= agora_idx]
 
-    if not mxn_bruto.dropna().empty:
+    # --- CÁLCULOS DAS MÉTRICAS (RSI, PPO, etc) ---
+    if mxn_bruto is not None and not mxn_bruto.dropna().empty:
         mxn_df = pd.DataFrame(mxn_bruto, columns=['Close'])
         delta = mxn_df['Close'].diff()
         gain, loss = delta.where(delta > 0, 0.0), -delta.where(delta < 0, 0.0)
@@ -67,14 +218,21 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         linha_ambar = (pct_brl * 40).round(0) 
         rsi_atual_mxn, ppo_atual = mxn_df['RSI_14'].iloc[-1], ppo_hist.iloc[-1]
     else:
-        rastro_azul = pd.Series(0, index=verde_count.index)
-        linha_cinza = pd.Series(0, index=verde_count.index)
-        linha_ambar = pd.Series(0, index=verde_count.index)
+        # Fallback para quando não há dados MXN
+        if verde_count is not None and not verde_count.empty:
+            rastro_azul = pd.Series(0, index=verde_count.index)
+            linha_cinza = pd.Series(0, index=verde_count.index)
+            linha_ambar = pd.Series(0, index=verde_count.index)
+        else:
+            rastro_azul = pd.Series(dtype=float)
+            linha_cinza = pd.Series(dtype=float)
+            linha_ambar = pd.Series(dtype=float)
         rsi_atual_mxn, ppo_atual = 50, 0
 
-    verde_atual = verde_count.iloc[-1] if not verde_count.empty else 0
-    verm_atual = vermelha_count.iloc[-1] if not vermelha_count.empty else 0
-    azul_atual = rastro_azul.iloc[-1] if not rastro_azul.empty else 0
+    # --- MÉTRICAS ATUAIS ---
+    verde_atual = verde_count.iloc[-1] if verde_count is not None and not verde_count.empty else 0
+    verm_atual = vermelha_count.iloc[-1] if vermelha_count is not None and not vermelha_count.empty else 0
+    azul_atual = rastro_azul.iloc[-1] if rastro_azul is not None and not rastro_azul.empty else 0
     
     spread = verde_atual - verm_atual 
     cor_spread = "#10B981" if spread > 0 else "#EF4444" if spread < 0 else "#94A3B8"
@@ -93,19 +251,23 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
     limite_forte, limite_normal = 30, 10
     limite_leilao = 35 
     
-    if spread >= limite_forte: status_color, status_text = "#10B981", "🟢 FORTE PRESSÃO COMPRADORA"
-    elif spread >= limite_normal: status_color, status_text = "#34D399", "🟢 PRESSÃO COMPRADORA"
-    elif spread <= -limite_forte: status_color, status_text = "#EF4444", "🔴 FORTE PRESSÃO VENDEDORA"
-    elif spread <= -limite_normal: status_color, status_text = "#F87171", "🔴 PRESSÃO VENDEDORA"
-    else: status_color, status_text = "#94A3B8", "⚪ CONSOLIDAÇÃO / NEUTRO"
+    if spread >= limite_forte: 
+        status_color, status_text = "#10B981", "🟢 FORTE PRESSÃO COMPRADORA"
+    elif spread >= limite_normal: 
+        status_color, status_text = "#34D399", "🟢 PRESSÃO COMPRADORA"
+    elif spread <= -limite_forte: 
+        status_color, status_text = "#EF4444", "🔴 FORTE PRESSÃO VENDEDORA"
+    elif spread <= -limite_normal: 
+        status_color, status_text = "#F87171", "🔴 PRESSÃO VENDEDORA"
+    else: 
+        status_color, status_text = "#94A3B8", "⚪ CONSOLIDAÇÃO / NEUTRO"
 
-    # Pega a hora atual no fuso de São Paulo
+    # --- LÓGICA DE LEILÃO ---
     agora = pd.Timestamp.now(tz=BRT).time()
     inicio_leilao = time(8, 55)
     fim_leilao = time(9, 0)
-    alerta_leilao_html = "" # Garante que fora do horário a variável fique vazia
+    alerta_leilao_html = ""
 
-    # Lógica de Leilão (Tempo Real) - SÓ RODA ENTRE 08:55 E 09:00
     if inicio_leilao <= agora <= fim_leilao:
         if spread >= limite_leilao and azul_atual > 0:
             alerta_leilao_html = f"<div class='leilao-box' style='border-left-color: #10B981;'><span class='leilao-pulse' style='color: #10B981; font-weight: bold; font-size: 15px;'>⏳ LEILÃO (08:55): ✅ COMPRA HABILITADA (Spread: {spread:+.0f} | Azul: {azul_atual:+.0f})</span></div>"
@@ -114,7 +276,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         else: 
             alerta_leilao_html = f"<div class='leilao-box' style='border-left-color: #94A3B8;'><span style='color: #94A3B8; font-size: 14px;'>⏳ LEILÃO (08:55): </span><span style='color: #94A3B8; font-weight: bold; font-size: 15px;'>Aguardando spread (+{limite_leilao} ou -{limite_leilao}) e alinhamento do Azul</span></div>"
 
-    # --- RENDERIZAÇÃO DO CABEÇALHO (MANTIDO EXATAMENTE IGUAL) ---
+    # --- RENDERIZAÇÃO DO CABEÇALHO ---
     placeholder_dados.markdown(f"""
         <div style='display: flex; justify-content: space-around; align-items: center; background: rgba(15, 23, 42, 0.6); border-radius: 8px; padding: 5px 10px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);'>
             <div style='text-align: center;'><span style='color: #94A3B8; font-size: 10px;'>VERDE</span><br><span style='color: #10B981; font-weight: bold; font-size: 15px;'>🟢 {verde_atual:.0f}</span></div>
@@ -124,9 +286,9 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         </div>
     """, unsafe_allow_html=True)
 
-    # Exibe o alerta de leilão (se estiver no horário)
     st.markdown(alerta_leilao_html, unsafe_allow_html=True)
 
+    # --- PROBABILIDADE E STATUS ---
     c_prob, c_status = st.columns([1, 1])
     with c_prob:
         st.markdown(f"""
@@ -150,9 +312,12 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         </div>
         """, unsafe_allow_html=True)
 
-    # ==========================================
-    # GRÁFICO COM ALTURA RESPONSIVA (MODIFICADO)
-    # ==========================================
+    # --- GRÁFICO PRINCIPAL ---
+    # Verifica se todos os DataFrames são válidos antes de prosseguir
+    if verde_count is None or vermelha_count is None or rastro_azul is None:
+        st.warning("⚠️ Dados insuficientes para desenhar o gráfico.")
+        return
+        
     common_idx = verde_count.index.intersection(vermelha_count.index).intersection(rastro_azul.index)
     
     if common_idx.empty:
@@ -175,7 +340,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         hovertemplate='📊 Spread: %{customdata:.0f}<extra></extra>'
     ))
 
-     # 2. VERMELHA
+    # 2. VERMELHA
     fig.add_trace(go.Scatter(
         x=common_idx,
         y=vermelha_count[common_idx],
@@ -202,24 +367,26 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
     ))
 
     # 4. FLUXO BASE (Cinza)
-    fig.add_trace(go.Scatter(
-        x=linha_cinza.index,
-        y=linha_cinza,
-        mode='lines',
-        name='⚪ (Fluxo Base)',
-        line=dict(color='rgba(148, 163, 184, 0.6)', width=1.2, dash='solid', shape='spline', smoothing=0.6),
-        hoverinfo='skip'
-    ))
+    if linha_cinza is not None and not linha_cinza.empty:
+        fig.add_trace(go.Scatter(
+            x=linha_cinza.index,
+            y=linha_cinza,
+            mode='lines',
+            name='⚪ (Fluxo Base)',
+            line=dict(color='rgba(148, 163, 184, 0.6)', width=1.2, dash='solid', shape='spline', smoothing=0.6),
+            hoverinfo='skip'
+        ))
 
     # 5. WDO (Âmbar)
-    fig.add_trace(go.Scatter(
-        x=linha_ambar.index,
-        y=linha_ambar,
-        mode='lines',
-        name='🟠 (WDO)',
-        line=dict(color='#F59E0B', width=1.2, dash='solid', shape='spline', smoothing=0.6),
-        hoverinfo='skip'
-    ))
+    if linha_ambar is not None and not linha_ambar.empty:
+        fig.add_trace(go.Scatter(
+            x=linha_ambar.index,
+            y=linha_ambar,
+            mode='lines',
+            name='🟠 (WDO)',
+            line=dict(color='#F59E0B', width=1.2, dash='solid', shape='spline', smoothing=0.6),
+            hoverinfo='skip'
+        ))
 
     # 6. AZUL
     fig.add_trace(go.Scatter(
@@ -233,14 +400,20 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         hovertemplate='Azul: %{y:.0f}<extra></extra>'
     ))
 
-    # Folga automática para evitar corte superior/inferior
-    all_vals = pd.concat([
-        verde_count[common_idx],
-        vermelha_count[common_idx],
-        linha_cinza.reindex(common_idx),
-        linha_ambar.reindex(common_idx),
-        rastro_azul.reindex(common_idx)
-    ], axis=0).dropna()
+    # Folga automática para evitar corte
+    all_vals_list = []
+    if verde_count is not None and not verde_count.empty:
+        all_vals_list.append(verde_count[common_idx])
+    if vermelha_count is not None and not vermelha_count.empty:
+        all_vals_list.append(vermelha_count[common_idx])
+    if linha_cinza is not None and not linha_cinza.empty:
+        all_vals_list.append(linha_cinza.reindex(common_idx))
+    if linha_ambar is not None and not linha_ambar.empty:
+        all_vals_list.append(linha_ambar.reindex(common_idx))
+    if rastro_azul is not None and not rastro_azul.empty:
+        all_vals_list.append(rastro_azul.reindex(common_idx))
+    
+    all_vals = pd.concat(all_vals_list, axis=0).dropna() if all_vals_list else pd.Series(dtype=float)
     
     if not all_vals.empty:
         y_max = all_vals.max()
@@ -249,9 +422,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
     else:
         y_max, y_min, padding = 10, -10, 5
 
-    # ==========================================
-    # LAYOUT GERAL DO GRÁFICO (MODIFICADO PARA RESPONSIVIDADE)
-    # ==========================================
+    # LAYOUT DO GRÁFICO
     fig.update_layout(
         hovermode='x unified',
         hoverlabel=dict(
@@ -260,7 +431,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             bordercolor="rgba(255,255,255,0.2)",
             align="left"
         ),
-        height=380,  # Altura reduzida para evitar rolagem
+        height=380,
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -268,25 +439,25 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             y=1.05,
             xanchor="center",
             x=0.5,
-            font=dict(color="white", size=11),  # Fonte ligeiramente menor
+            font=dict(color="white", size=11),
             bgcolor="rgba(0,0,0,0)"
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=10, r=50, t=30, b=20),  # Margens ajustadas
+        margin=dict(l=10, r=50, t=30, b=20),
         xaxis=dict(
             showgrid=True,
             gridcolor='rgba(255,255,255,0.1)',
             automargin=True,
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida para caber melhor
+            tickfont=dict(color="#F8FAFC", size=10),
             hoverformat='%H:%M',
             showspikes=True,
             spikemode='across',
             spikecolor='rgba(255,255,255,0.12)',
             spikethickness=0.3,
             spikesnap='cursor',
-            tickangle=-45 if len(common_idx) > 20 else 0  # Rotaciona labels se muitos pontos
+            tickangle=-45 if len(common_idx) > 20 else 0
         ),
         yaxis=dict(
             showgrid=True,
@@ -294,26 +465,25 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             side='left',
             automargin=True,
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida
+            tickfont=dict(color="#F8FAFC", size=10),
             range=[y_min - padding, y_max + padding]
         ),
         yaxis2=dict(
-            title=dict(text="Azul", font=dict(color="#F8FAFC", size=10)),  # Título menor
+            title=dict(text="Azul", font=dict(color="#F8FAFC", size=10)),
             overlaying='y',
             side='right',
             showticklabels=True,
-            tickfont=dict(color="#F8FAFC", size=10),  # Fonte reduzida
+            tickfont=dict(color="#F8FAFC", size=10),
             range=[
                 (rastro_azul.min() * 1.2 if not rastro_azul.empty else -75),
                 (rastro_azul.max() * 1.2 if not rastro_azul.empty else 75)
             ]
         ),
-        # Configuração para responsividade mobile
         autosize=True,
-        width=None  # Remove largura fixa, permite ajuste automático
+        width=None
     )
     
-    # Reduz tamanho dos marcadores se houver muitos pontos
+    # Ajuste de tamanho dos marcadores
     num_points = len(common_idx)
     if num_points > 50:
         fig.update_traces(marker=dict(size=3))
@@ -326,8 +496,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         theme=None,
         config={
             'displayModeBar': False,
-            'scrollZoom': False,  # Habilita zoom para mobile
+            'scrollZoom': False,
             'displaylogo': False,
-            'responsive': True   # Força responsividade
+            'responsive': True
         }
     )

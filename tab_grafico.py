@@ -27,8 +27,20 @@ def get_historico_ativos_cache(tickers_tuple, start_dt_str, end_dt_str, modo):
     - end_dt_str: string da data de fim
     - modo: 'alta' ou 'baixa'
     """
-    start_dt = pd.Timestamp(start_dt_str).tz_localize(BRT)
-    end_dt = pd.Timestamp(end_dt_str).tz_localize(BRT)
+    # Converte strings para Timestamp com timezone de forma segura
+    start_dt = pd.Timestamp(start_dt_str)
+    end_dt = pd.Timestamp(end_dt_str)
+    
+    # Se já tem timezone, usa tz_convert; senão, usa tz_localize
+    if start_dt.tz is None:
+        start_dt = start_dt.tz_localize(BRT)
+    else:
+        start_dt = start_dt.tz_convert(BRT)
+    
+    if end_dt.tz is None:
+        end_dt = end_dt.tz_localize(BRT)
+    else:
+        end_dt = end_dt.tz_convert(BRT)
     
     # Converte tupla de volta para lista
     tickers = list(tickers_tuple)
@@ -58,22 +70,29 @@ def get_ativos_com_cache(tickers, start_dt, end_dt, modo):
     hoje = pd.Timestamp.now(tz=BRT).normalize()
     tickers_tuple = tuple(tickers)  # Converte para tupla (hashable)
     
+    # Converte para strings de forma segura (sem timezone na string)
+    start_dt_str = start_dt.tz_convert(BRT).strftime('%Y-%m-%d %H:%M:%S')
+    end_dt_str = end_dt.tz_convert(BRT).strftime('%Y-%m-%d %H:%M:%S')
+    
     # Se o período é totalmente no passado (end_dt < hoje)
     if end_dt < hoje:
         return get_historico_ativos_cache(
             tickers_tuple, 
-            str(start_dt), 
-            str(end_dt), 
+            start_dt_str, 
+            end_dt_str, 
             modo
         )
     
     # Se o período inclui hoje, separa histórico + hoje
     if start_dt < hoje:
         # Parte histórica (antes de hoje)
+        historico_end = hoje - pd.Timedelta(seconds=1)
+        historico_end_str = historico_end.strftime('%Y-%m-%d %H:%M:%S')
+        
         historico = get_historico_ativos_cache(
             tickers_tuple,
-            str(start_dt),
-            str(hoje - pd.Timedelta(seconds=1)),
+            start_dt_str,
+            historico_end_str,
             modo
         )
         
@@ -107,6 +126,12 @@ def get_ultimo_candle_para_periodo(end_dt):
     """
     agora = pd.Timestamp.now(tz=BRT)
     
+    # Converte end_dt para timezone BRT se necessário
+    if end_dt.tz is None:
+        end_dt = end_dt.tz_localize(BRT)
+    else:
+        end_dt = end_dt.tz_convert(BRT)
+    
     # Se o período termina antes de agora (dados históricos completos)
     if end_dt < agora:
         # Usa o fim do período como referência fixa
@@ -116,14 +141,23 @@ def get_ultimo_candle_para_periodo(end_dt):
     return get_ultimo_candle_cacheado()
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def processar_dados_historicos(start_dt_str, end_dt_str):
+def processar_dados_historicos(start_dt, end_dt):
     """
     Processa APENAS dados históricos (imutáveis) do MXN/BRL
+    Aceita Timestamps diretamente (com ou sem timezone)
     """
-    start_dt = pd.Timestamp(start_dt_str).tz_localize(BRT)
-    end_dt = pd.Timestamp(end_dt_str).tz_localize(BRT)
+    # Converte para timezone BRT de forma segura
+    if start_dt.tz is None:
+        start_dt = start_dt.tz_localize(BRT)
+    else:
+        start_dt = start_dt.tz_convert(BRT)
     
-    # Busca dados do MXN/BRL com cache
+    if end_dt.tz is None:
+        end_dt = end_dt.tz_localize(BRT)
+    else:
+        end_dt = end_dt.tz_convert(BRT)
+    
+    # Busca dados do MXN/BRL
     mxn_bruto, brl_bruto, mxn_ref, brl_ref = fetch_mxn_brl(start_dt, end_dt)
     
     return {
@@ -143,9 +177,16 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
     Renderiza o gráfico com dados históricos imutáveis e dados atuais atualizáveis
     """
     
-    # Converte datas para string para usar como chave de cache
-    start_dt_str = str(start_dt)
-    end_dt_str = str(end_dt)
+    # Garante que as datas estão no timezone correto
+    if start_dt.tz is None:
+        start_dt = start_dt.tz_localize(BRT)
+    else:
+        start_dt = start_dt.tz_convert(BRT)
+    
+    if end_dt.tz is None:
+        end_dt = end_dt.tz_localize(BRT)
+    else:
+        end_dt = end_dt.tz_convert(BRT)
     
     # --- PROCESSAMENTO DOS DADOS COM CACHE ---
     with st.spinner("Processando Inteligência de Gráfico..."):
@@ -153,8 +194,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         verde_count = get_ativos_com_cache(VERDE_TICKERS, start_dt, end_dt, modo='alta')
         vermelha_count = get_ativos_com_cache(VERMELHA_TICKERS, start_dt, end_dt, modo='alta')
         
-        # Dados do MXN/BRL (históricos imutáveis)
-        dados_mxn = processar_dados_historicos(start_dt_str, end_dt_str)
+        # Dados do MXN/BRL (históricos imutáveis) - passa os Timestamps diretamente
+        dados_mxn = processar_dados_historicos(start_dt, end_dt)
         mxn_bruto = dados_mxn['mxn_bruto']
         brl_bruto = dados_mxn['brl_bruto']
         mxn_ref = dados_mxn['mxn_ref']

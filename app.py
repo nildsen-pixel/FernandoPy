@@ -25,6 +25,21 @@ from helpers import (
 )
 
 
+@st.fragment(run_every="1s")
+def render_clock():
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+
+    st.markdown(f"""
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+        TREND AXIS
+        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
+            | {now.strftime("%H:%M:%S")}
+        </span>
+    </h1>
+    """, unsafe_allow_html=True)
+
+
+
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Trend Axis WDO",
@@ -382,29 +397,11 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 # Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
-@st.fragment(run_every="1s")
-def render_clock():
-    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
-
-    st.markdown(f"""
-    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-        TREND AXIS
-        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
-            | {now.strftime("%H:%M:%S")}
-        </span>
-    </h1>
-    """, unsafe_allow_html=True)
 
 with c_tit:
     
     render_clock()
 
-    # st.markdown("""
-    # <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-    #     TREND AXIS
-    #     <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
-    # </h1>
-    # """, unsafe_allow_html=True)
 
 with c_fd1:
     with st.popover("📅 Período", width='stretch'):
@@ -463,41 +460,6 @@ else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
 
-# --- RELÓGIO JS (SUBSTITUÍDO st.components.v1.html POR st.iframe) ---
-# NOTA: st.iframe não executa JavaScript diretamente como st.components.v1.html.
-# Para manter a funcionalidade do relógio, vamos usar st.markdown com JavaScript inline
-# ou manter components.html com warning até a data limite.
-
-# SOLUÇÃO 1: Usar st.markdown com JavaScript (RECOMENDADO)
-# clock_js = """
-# <script>
-# function updateClock() {
-#     const now = new Date();
-#     const options = {
-#         timeZone: 'America/Sao_Paulo',
-#         hour: '2-digit',
-#         minute: '2-digit',
-#         second: '2-digit',
-#         hour12: false
-#     };
-#     const timeString = now.toLocaleTimeString('pt-BR', options);
-#     const clockElement = window.parent.document.querySelector('#digital-clock');
-#     if (clockElement) {
-#         clockElement.innerText = '| ' + timeString;
-#     }
-# }
-# setInterval(updateClock, 1000);
-# updateClock();
-# </script>
-# """
-# st.markdown(clock_js, unsafe_allow_html=True)
-
-
-# SOLUÇÃO 2 (Alternativa): Se precisar de iframe, crie um arquivo HTML externo
-# com o código do relógio e use st.iframe("clock.html", height=0)
-
-# SOLUÇÃO 3 (Temporária): Manter components.html com suppress_deprecation_warning
-# components.html(clock_js, height=0)
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---
 # Usando st.markdown com JavaScript em vez de components.html

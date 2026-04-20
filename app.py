@@ -455,37 +455,91 @@ else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
-# --- CONTROLE DE ABA ATIVA (SOLUÇÃO 2) ---
+# --- CONTROLE DE ABA ATIVA (SOLUÇÃO 2 - ESTILO ORIGINAL) ---
 if "active_tab" not in st.session_state:
     st.session_state.active_tab = "Gráfico"
 
-# --- CRIAR BOTÕES DE NAVEGAÇÃO ESTILIZADOS ---
-st.markdown('<div class="tab-buttons-container">', unsafe_allow_html=True)
+# --- CRIAR ABAS NO ESTILO ORIGINAL STREAMLIT ---
+st.markdown("""
+<style>
+/* Estilo das abas similar ao original do Streamlit */
+.original-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
 
-col1, col2, col3 = st.columns(3)
+.original-tab {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #9E9E9E;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.original-tab:hover {
+    color: #E0E0E0;
+    border-bottom-color: #666;
+}
+
+.original-tab.active {
+    color: #FFFFFF;
+    border-bottom-color: #FF4B4B;
+}
+
+/* Responsivo para mobile */
+@media (max-width: 768px) {
+    .original-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .original-tab {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Criar as abas no estilo original
+col1, col2, col3 = st.columns([1, 1.2, 1.2])
 
 with col1:
-    if st.button("📈 Gráfico", use_container_width=True, 
+    if st.button("📈 Gráfico", 
+                 key="tab_grafico",
+                 use_container_width=True,
                  type="primary" if st.session_state.active_tab == "Gráfico" else "secondary"):
         st.session_state.active_tab = "Gráfico"
         st.rerun()
 
 with col2:
-    if st.button("🎯 Backtest de Correlação", use_container_width=True,
+    if st.button("🎯 Backtest de Correlação", 
+                 key="tab_backtest",
+                 use_container_width=True,
                  type="primary" if st.session_state.active_tab == "Backtest" else "secondary"):
         st.session_state.active_tab = "Backtest"
         st.rerun()
 
 with col3:
-    if st.button("🔥 Mapa de Calor Abertura", use_container_width=True,
+    if st.button("🔥 Mapa de Calor Abertura", 
+                 key="tab_heatmap",
+                 use_container_width=True,
                  type="primary" if st.session_state.active_tab == "Mapa de Calor" else "secondary"):
         st.session_state.active_tab = "Mapa de Calor"
         st.rerun()
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# --- LINHA DIVISÓRIA ---
-st.divider()
+# Adicionar uma linha sutil abaixo das abas
+st.markdown('<hr style="margin: 0.5rem 0 1rem 0; opacity: 0.3;">', unsafe_allow_html=True)
 
 # --- RENDERIZAR APENAS A ABA SELECIONADA ---
 if st.session_state.active_tab == "Gráfico":

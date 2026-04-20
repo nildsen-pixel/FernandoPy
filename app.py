@@ -352,7 +352,7 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 
 # --- 5. INTERFACE PRINCIPAL ---
 st_autorefresh(interval=1000, key="clock_refresh")
-datas_disponiveis = gerar_dias_uteis()
+
 
 # --- CONTROLE DE ATUALIZAÇÃO DOS DADOS (60s) ---
 if "last_data_update" not in st.session_state:
@@ -362,6 +362,8 @@ else:
     atualizar_dados = (datetime.now() - st.session_state.last_data_update).seconds >= 60
 
 if atualizar_dados:
+    datas_disponiveis = gerar_dias_uteis()
+    
     st.session_state.last_data_update = datetime.now()
     
     with st.spinner(""):

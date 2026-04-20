@@ -464,7 +464,7 @@ else:
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
 
-st.iframe("clock.html", height=0)
+st.iframe("clock.html", height=35)
 
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---

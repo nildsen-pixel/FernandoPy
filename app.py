@@ -399,8 +399,14 @@ c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 
 with c_tit:
-    
-    render_clock()
+
+    col1, col2 = st.columns([3,1])
+
+    with col1:
+        st.markdown("<h1 class='modern-title'>TREND AXIS</h1>", unsafe_allow_html=True)
+
+    with col2:
+        st.iframe("clock.html", height=30)
 
 
 with c_fd1:

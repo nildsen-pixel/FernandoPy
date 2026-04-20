@@ -23,6 +23,7 @@ from helpers import (
     gerar_dias_uteis, ultimo_candle_real, fetch_di_variacao, checar_e_enviar_alerta_di
 )
 
+
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Trend Axis WDO",
@@ -311,6 +312,8 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 .stPopover button {
     width: 100% !important;
     min-width: 100px !important;
+    color: #94A3B8 !important;
+    background-color: #1E293B !important;
     font-size: 12px !important;
     padding: 4px 8px !important;
 }
@@ -348,12 +351,28 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 """, unsafe_allow_html=True)
 
 # --- 5. INTERFACE PRINCIPAL ---
-st_autorefresh(interval=60000, key="data_refresh")
+st_autorefresh(interval=1000, key="clock_refresh")
 datas_disponiveis = gerar_dias_uteis()
 
-with st.spinner(""):
-    di_34 = fetch_di_variacao("BMFBOVESPA:DI1F2034", "DI1F34")
-    di_35 = fetch_di_variacao("BMFBOVESPA:DI1F2035", "DI1F35")
+# --- CONTROLE DE ATUALIZAÇÃO DOS DADOS (60s) ---
+if "last_data_update" not in st.session_state:
+    st.session_state.last_data_update = datetime.now()
+    atualizar_dados = True
+else:
+    atualizar_dados = (datetime.now() - st.session_state.last_data_update).seconds >= 60
+
+if atualizar_dados:
+    st.session_state.last_data_update = datetime.now()
+    
+    with st.spinner(""):
+        di_34 = fetch_di_variacao("BMFBOVESPA:DI1F2034", "DI1F34")
+        di_35 = fetch_di_variacao("BMFBOVESPA:DI1F2035", "DI1F35")
+    
+    st.session_state.di_34 = di_34
+    st.session_state.di_35 = di_35
+else:
+    di_34 = st.session_state.get("di_34", 0)
+    di_35 = st.session_state.get("di_35", 0)
 
 di_variacao = di_34
 cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
@@ -363,15 +382,27 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown("""
+    
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+
+    st.markdown(f"""
     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
         TREND AXIS
-        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
+            | {now.strftime("%H:%M:%S")}
+        </span>
     </h1>
     """, unsafe_allow_html=True)
 
+    # st.markdown("""
+    # <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+    #     TREND AXIS
+    #     <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+    # </h1>
+    # """, unsafe_allow_html=True)
+
 with c_fd1:
-    with st.popover("📅 Período", use_container_width=True):
+    with st.popover("📅 Período", width='stretch'):
         start_date = st.selectbox(
             "📅 Início",
             options=datas_disponiveis,
@@ -417,34 +448,55 @@ end_dt = pd.Timestamp(f"{end_date} {end_time}").tz_localize(BRT)
 if start_dt > end_dt:
     start_dt, end_dt = end_dt, start_dt
 
-verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
-vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
+if atualizar_dados:
+    verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
+    vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
 
-# --- RELÓGIO JS ---
-components.html("""
-<script>
-function updateClock() {
-    const now = new Date();
-    const options = {
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-    const timeString = now.toLocaleTimeString('pt-BR', options);
-    const clockElement = window.parent.document.querySelector('#digital-clock');
-    if (clockElement) {
-        clockElement.innerText = '| ' + timeString;
-    }
-}
-setInterval(updateClock, 1000);
-updateClock();
-</script>
-""", height=0)
+    st.session_state.verde_count = verde_count
+    st.session_state.vermelha_count = vermelha_count
+else:
+    verde_count = st.session_state.get("verde_count", 0)
+    vermelha_count = st.session_state.get("vermelha_count", 0)
 
-# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
-components.html("""
+# --- RELÓGIO JS (SUBSTITUÍDO st.components.v1.html POR st.iframe) ---
+# NOTA: st.iframe não executa JavaScript diretamente como st.components.v1.html.
+# Para manter a funcionalidade do relógio, vamos usar st.markdown com JavaScript inline
+# ou manter components.html com warning até a data limite.
+
+# SOLUÇÃO 1: Usar st.markdown com JavaScript (RECOMENDADO)
+# clock_js = """
+# <script>
+# function updateClock() {
+#     const now = new Date();
+#     const options = {
+#         timeZone: 'America/Sao_Paulo',
+#         hour: '2-digit',
+#         minute: '2-digit',
+#         second: '2-digit',
+#         hour12: false
+#     };
+#     const timeString = now.toLocaleTimeString('pt-BR', options);
+#     const clockElement = window.parent.document.querySelector('#digital-clock');
+#     if (clockElement) {
+#         clockElement.innerText = '| ' + timeString;
+#     }
+# }
+# setInterval(updateClock, 1000);
+# updateClock();
+# </script>
+# """
+# st.markdown(clock_js, unsafe_allow_html=True)
+
+
+# SOLUÇÃO 2 (Alternativa): Se precisar de iframe, crie um arquivo HTML externo
+# com o código do relógio e use st.iframe("clock.html", height=0)
+
+# SOLUÇÃO 3 (Temporária): Manter components.html com suppress_deprecation_warning
+# components.html(clock_js, height=0)
+
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---
+# Usando st.markdown com JavaScript em vez de components.html
+mobile_resize_js = """
 <script>
 function resizeChartsForMobile() {
     setTimeout(function() {
@@ -491,7 +543,8 @@ var observer = new MutationObserver(function(mutations) {
 });
 observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
-""", height=0)
+"""
+st.markdown(mobile_resize_js, unsafe_allow_html=True)
 
 # --- ABAS ---
 tab1, tab2, tab3 = st.tabs(["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"])

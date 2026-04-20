@@ -511,35 +511,71 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Criar as abas no estilo original
-col1, col2, col3 = st.columns([1, 1.2, 1.2])
+# --- CONTROLE DE ABA ATIVA (SEM BOTÕES - PILLS) ---
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "Gráfico"
 
-with col1:
-    if st.button("📈 Gráfico", 
-                 key="tab_grafico",
-                 use_container_width=True,
-                 type="primary" if st.session_state.active_tab == "Gráfico" else "secondary"):
-        st.session_state.active_tab = "Gráfico"
-        st.rerun()
+# Mapeamento dos nomes
+tab_options = {
+    "📈 Gráfico": "Gráfico",
+    "🎯 Backtest de Correlação": "Backtest",
+    "🔥 Mapa de Calor Abertura": "Mapa de Calor"
+}
 
-with col2:
-    if st.button("🎯 Backtest de Correlação", 
-                 key="tab_backtest",
-                 use_container_width=True,
-                 type="primary" if st.session_state.active_tab == "Backtest" else "secondary"):
-        st.session_state.active_tab = "Backtest"
-        st.rerun()
+# CSS para pills
+st.markdown("""
+<style>
+/* Estiliza os pills para parecerem abas */
+div[data-testid="stPills"] {
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1.5rem;
+}
 
-with col3:
-    if st.button("🔥 Mapa de Calor Abertura", 
-                 key="tab_heatmap",
-                 use_container_width=True,
-                 type="primary" if st.session_state.active_tab == "Mapa de Calor" else "secondary"):
-        st.session_state.active_tab = "Mapa de Calor"
-        st.rerun()
+div[data-testid="stPills"] button {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
+    background: transparent !important;
+    border-bottom: 2px solid transparent;
+    color: #9E9E9E;
+}
 
-# Adicionar uma linha sutil abaixo das abas
-st.markdown('<hr style="margin: 0.5rem 0 1rem 0; opacity: 0.3;">', unsafe_allow_html=True)
+div[data-testid="stPills"] button[aria-selected="true"] {
+    color: #FF4B4B !important;
+    border-bottom-color: #FF4B4B !important;
+    background: transparent !important;
+}
+
+div[data-testid="stPills"] button:hover {
+    background: transparent !important;
+    border-bottom-color: rgba(255, 75, 75, 0.3);
+}
+
+@media (max-width: 768px) {
+    div[data-testid="stPills"] button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Usar pills (requer Streamlit >= 1.30)
+aba_selecionada_display = st.pills(
+    "Selecione:",
+    options=list(tab_options.keys()),
+    selection_mode="single",
+    default=[k for k, v in tab_options.items() if v == st.session_state.active_tab][0],
+    label_visibility="collapsed"
+)
+
+# Atualiza session_state
+if aba_selecionada_display:
+    st.session_state.active_tab = tab_options[aba_selecionada_display[0]]
+
+# Linha divisória
+st.markdown('<hr style="margin: 0 0 1.5rem 0; opacity: 0.2;">', unsafe_allow_html=True)
 
 # --- RENDERIZAR APENAS A ABA SELECIONADA ---
 if st.session_state.active_tab == "Gráfico":

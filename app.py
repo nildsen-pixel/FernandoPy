@@ -397,7 +397,7 @@ c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
     
-    components.iframe("clock.html", height=35)
+    components.iframe("clock.html", height=0)
 
 
 with c_fd1:

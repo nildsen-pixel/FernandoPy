@@ -324,37 +324,46 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
     .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
 
-/* CSS PARA ESTILIZAR OS PILLS COMO ABAS */
-div[data-testid="stPills"] {
+/* CSS PARA ESTILIZAR OS PILLS COMO ABAS (VERSÃO CORRIGIDA) */
+
+/* Container */
+div[data-baseweb="button-group"] {
     gap: 0;
     border-bottom: 1px solid #3E3E3E;
     margin-bottom: 1.5rem;
 }
 
-div[data-testid="stPills"] button {
+/* Botões (estado padrão) */
+div[data-baseweb="button-group"] button[kind="pills"] {
     padding: 0.5rem 1.2rem;
     margin: 0;
     border-radius: 0;
     background: transparent !important;
-    border-bottom: 2px solid transparent;
-    color: #9E9E9E;
+    border-bottom: 2px solid transparent !important;
+    color: #9E9E9E !important;
 }
 
-div[data-testid="stPills"] button[aria-selected="true"] {
-    color: #1E293B !important;
-    border-bottom-color: #FF4B4B !important;
+/* Botão ativo */
+div[data-baseweb="button-group"] button[kind="pillsActive"] {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
     background: transparent !important;
+    color: #1E293B !important; /* sua cor original */
+    border-bottom: 2px solid #FF4B4B !important;
 }
 
-div[data-testid="stPills"] button:hover {
+/* Hover */
+div[data-baseweb="button-group"] button:hover {
     background: transparent !important;
-    border-bottom-color: rgba(255, 75, 75, 0.3);
+    border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important;
 }
 
+/* Mobile */
 @media (max-width: 768px) {
-    div[data-testid="stPills"] button {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
+    div[data-baseweb="button-group"] button {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.85rem !important;
     }
 }
 </style>

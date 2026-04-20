@@ -366,12 +366,22 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown("""
-    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+    
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+
+    st.markdown(f"""
+    <h1 class='modern-title'>
         TREND AXIS
-        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+        <span class='title-date'>| {now.strftime("%H:%M:%S")}</span>
     </h1>
     """, unsafe_allow_html=True)
+
+    # st.markdown("""
+    # <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+    #     TREND AXIS
+    #     <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+    # </h1>
+    # """, unsafe_allow_html=True)
 
 with c_fd1:
     with st.popover("📅 Período", width='stretch'):

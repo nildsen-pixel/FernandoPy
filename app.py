@@ -222,7 +222,7 @@ div[data-testid="stVerticalBlock"] {
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) E ABAS COM CORES IGUAIS AO PERÍODO ---
+# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) ---
 st.markdown("""
 <style>
 /* Fixa o layout das colunas */
@@ -324,45 +324,39 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
     .stColumns > div:nth-child(4) { min-width: 65px !important; }
 }
 
-/* ============================================ */
-/* ABORDAGEM MAIS ESPECÍFICA - USANDO st-emotion-cache */
-/* ============================================ */
-
-/* Container dos pills */
-div[class*="stPills"] {
-    gap: 0 !important;
-    border-bottom: 1px solid #3E3E3E !important;
-    margin-bottom: 1.5rem !important;
+/* CSS PARA ESTILIZAR OS PILLS COMO ABAS */
+div[data-testid="stPills"] {
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1.5rem;
 }
 
-/* Botões dos pills */
-button[class*="stPills"] {
-    padding: 0.5rem 1.2rem !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    background-color: #1E293B !important;
-    border-bottom: 2px solid transparent !important;
+div[data-testid="stPills"] button {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
     color: #94A3B8 !important;
-    font-weight: 500 !important;
+    background-color: #1E293B !important;
+    border-bottom: 2px solid transparent;
 }
 
-/* Hover */
-button[class*="stPills"]:hover {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
-}
-
-/* Botão selecionado */
-button[class*="stPills"][aria-selected="true"] {
+div[data-testid="stPills"] button[aria-selected="true"] {
     color: #FF4B4B !important;
     border-bottom-color: #FF4B4B !important;
-    background-color: #1E293B !important;
+    background: transparent !important;
 }
 
-/* Hover no botão selecionado */
-button[class*="stPills"][aria-selected="true"]:hover {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
+div[data-testid="stPills"] button:hover {
+    color: #94A3B8 !important;
+    background-color: #ededb4 !important;
+    border-bottom-color: rgba(255, 75, 75, 0.3);
+}
+
+@media (max-width: 768px) {
+    div[data-testid="stPills"] button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -475,6 +469,7 @@ if st.session_state.active_tab not in opcoes_abas:
     st.session_state.active_tab = opcoes_abas[0]
 
 # Usar pills (requer Streamlit >= 1.30)
+# O st.pills retorna o valor selecionado diretamente quando selection_mode="single"
 aba_selecionada = st.pills(
     "Selecione a aba:",
     options=opcoes_abas,

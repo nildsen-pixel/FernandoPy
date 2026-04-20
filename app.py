@@ -325,13 +325,13 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 }
 
 /* CSS PARA ESTILIZAR OS PILLS COMO ABAS */
-div[data-testid="stPills"] {
+.stPills {
     gap: 0;
     border-bottom: 1px solid #3E3E3E;
     margin-bottom: 1.5rem;
 }
 
-div[data-testid="stPills"] button {
+.stPills button {
     padding: 0.5rem 1.2rem;
     margin: 0;
     border-radius: 0;
@@ -340,13 +340,13 @@ div[data-testid="stPills"] button {
     border-bottom: 2px solid transparent;
 }
 
-div[data-testid="stPills"] button[aria-selected="true"] {
+.stPills button[aria-selected="true"] {
     color: #FF4B4B !important;
     border-bottom-color: #FF4B4B !important;
     background: transparent !important;
 }
 
-div[data-testid="stPills"] button:hover {
+.stPills button:hover {
     color: #94A3B8 !important;
     background-color: #ededb4 !important;
     border-bottom-color: rgba(255, 75, 75, 0.3);

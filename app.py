@@ -403,8 +403,8 @@ with c_tit:
         <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
     </h1>
     """, unsafe_allow_html=True)
-
-
+    
+    
 
 with c_fd1:
     with st.popover("📅 Período", width='stretch'):
@@ -464,7 +464,28 @@ else:
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
 
-st.iframe("clock.html", height=35)
+# --- RELÓGIO JS ---
+st.html("""
+<script>
+function updateClock() {
+    const now = new Date();
+    const options = {
+        timeZone: 'America/Sao_Paulo',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    };
+    const timeString = now.toLocaleTimeString('pt-BR', options);
+    const clockElement = window.parent.document.querySelector('#digital-clock');
+    if (clockElement) {
+        clockElement.innerText = '| ' + timeString;
+    }
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+""", height=0)
 
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---

@@ -464,7 +464,7 @@ else:
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
 
-components.iframe("""
+st.iframe("""
 <script>
 function updateClock() {
     const now = new Date();

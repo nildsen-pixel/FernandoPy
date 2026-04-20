@@ -151,7 +151,7 @@ def render_backtest(start_dt, end_dt):
         autosize=False
     )
     
-    st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
     
     c1, c2, c3 = st.columns(3)
     with c1:
@@ -191,7 +191,7 @@ def render_backtest(start_dt, end_dt):
             st.markdown("<p style='color: #94A3B8; font-size: 14px;'>Histórico Diário</p>", unsafe_allow_html=True)
             st.dataframe(
                 df_leilao,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=400
             )
@@ -224,7 +224,7 @@ def render_backtest(start_dt, end_dt):
             df_resumo = pd.DataFrame(resumo_dados)
             st.dataframe(
                 df_resumo,
-                use_container_width=True,
+                width='stretch',
                 hide_index=True,
                 height=400
             )

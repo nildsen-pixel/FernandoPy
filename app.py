@@ -407,7 +407,7 @@ with c_tit:
     
 
 with c_fd1:
-    with st.popover("📅 Período", use_container_width=True):
+    with st.popover("📅 Período", width='stretch'):
         start_date = st.selectbox(
             "📅 Início",
             options=datas_disponiveis,

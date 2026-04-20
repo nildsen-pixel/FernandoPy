@@ -328,29 +328,32 @@ div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
 /* CSS PARA ESTILIZAR OS PILLS COMO ABAS       */
 /* CORES IGUAIS AO OBJETO PERÍODO              */
 /* ============================================ */
+
+/* Container principal dos pills */
 div[data-testid="stPills"] {
-    gap: 0;
-    border-bottom: 1px solid #3E3E3E;
-    margin-bottom: 1.5rem;
-    background-color: transparent;
+    gap: 0 !important;
+    border-bottom: 1px solid #3E3E3E !important;
+    margin-bottom: 1.5rem !important;
+    background-color: transparent !important;
 }
 
+/* Cada botão/aba individual */
 div[data-testid="stPills"] button {
-    padding: 0.5rem 1.2rem;
-    margin: 0;
-    border-radius: 0;
-    background-color: #1E293B !important;  /* MESMA COR DO FUNDO DO BOTÃO PERÍODO */
-    border-bottom: 2px solid transparent;
-    color: #94A3B8 !important;  /* MESMA COR DO TEXTO DO BOTÃO PERÍODO */
-    font-weight: 500;
-    transition: all 0.2s ease;
+    padding: 0.5rem 1.2rem !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background-color: #1E293B !important;
+    border-bottom: 2px solid transparent !important;
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
 }
 
-/* HOVER - quando o mouse passa por cima */
+/* HOVER - quando o mouse passa por cima (qualquer aba) */
 div[data-testid="stPills"] button:hover {
-    background-color: #FFFFFF !important;  /* FUNDO BRANCO */
-    color: #1E293B !important;  /* TEXTO ESCURO */
-    border-bottom-color: transparent;
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border-bottom-color: transparent !important;
 }
 
 /* ABA ATIVA (selecionada) */
@@ -362,14 +365,16 @@ div[data-testid="stPills"] button[aria-selected="true"] {
 
 /* HOVER na aba ativa */
 div[data-testid="stPills"] button[aria-selected="true"]:hover {
-    background-color: #FFFFFF !important;  /* FUNDO BRANCO */
-    color: #1E293B !important;  /* TEXTO ESCURO */
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    border-bottom-color: transparent !important;
 }
 
+/* Para mobile */
 @media (max-width: 768px) {
     div[data-testid="stPills"] button {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.85rem !important;
     }
 }
 </style>

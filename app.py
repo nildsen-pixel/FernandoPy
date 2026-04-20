@@ -382,22 +382,27 @@ cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
 # Define colunas
 c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
-@st.fragment(run_every="1s")
-def render_clock():
-    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
+# @st.fragment(run_every="1s")
+# def render_clock():
+#     now = datetime.now(pytz.timezone("America/Sao_Paulo"))
 
-    st.markdown(f"""
-    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
-        TREND AXIS
-        <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
-            | {now.strftime("%H:%M:%S")}
-        </span>
-    </h1>
-    """, unsafe_allow_html=True)
+#     st.markdown(f"""
+#     <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+#         TREND AXIS
+#         <span class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>
+#             | {now.strftime("%H:%M:%S")}
+#         </span>
+#     </h1>
+#     """, unsafe_allow_html=True)
 
 with c_tit:
     
-    render_clock()
+    st.markdown("""
+    <div style="display:flex; align-items:center; gap:10px;">
+        <h1 class='modern-title' style="margin:0;">TREND AXIS</h1>
+        <iframe src="clock.html" style="border:none;height:25px;width:90px;"></iframe>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 with c_fd1:

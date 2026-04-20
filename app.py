@@ -465,7 +465,7 @@ else:
     
 
 # --- RELÓGIO JS ---
-st.html("""
+components.html("""
 <script>
 function updateClock() {
     const now = new Date();

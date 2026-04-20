@@ -397,7 +397,13 @@ c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
     
-    components.iframe("clock.html", height=0)
+    st.markdown("""
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+        TREND AXIS
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+    </h1>
+    """, unsafe_allow_html=True)
+
 
 
 with c_fd1:
@@ -456,6 +462,29 @@ if atualizar_dados:
 else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
+    
+
+components.iframe("""
+<script>
+function updateClock() {
+    const now = new Date();
+    const options = {
+        timeZone: 'America/Sao_Paulo',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    };
+    const timeString = now.toLocaleTimeString('pt-BR', options);
+    const clockElement = window.parent.document.querySelector('#digital-clock');
+    if (clockElement) {
+        clockElement.innerText = '| ' + timeString;
+    }
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+""", height=0)
 
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---

@@ -464,27 +464,7 @@ else:
     vermelha_count = st.session_state.get("vermelha_count", 0)
     
 
-st.iframe("""
-<script>
-function updateClock() {
-    const now = new Date();
-    const options = {
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-    const timeString = now.toLocaleTimeString('pt-BR', options);
-    const clockElement = window.parent.document.querySelector('#digital-clock');
-    if (clockElement) {
-        clockElement.innerText = '| ' + timeString;
-    }
-}
-setInterval(updateClock, 1000);
-updateClock();
-</script>
-""", height=0)
+st.iframe("clock.html", height=0)
 
 
 # --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (SUBSTITUÍDO) ---

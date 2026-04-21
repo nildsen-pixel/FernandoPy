@@ -465,6 +465,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # LAYOUT DO GRÁFICO
     fig.update_layout(
+        dragmode=False,
+        clickmode="none",
         hovermode='x unified',
         hoverlabel=dict(
             bgcolor="#1E293B",
@@ -539,6 +541,10 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             'displayModeBar': False,
             'scrollZoom': False,
             'displaylogo': False,
-            'responsive': True
+            'responsive': True,
+            "staticPlot": False,
+            "editable": False,
+            "showAxisDragHandles": False,
+            "showAxisRangeEntryBoxes": False
         }
     )

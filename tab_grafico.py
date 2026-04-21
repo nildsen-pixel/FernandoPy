@@ -396,17 +396,16 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # 3. VERDE
     fig.add_trace(go.Scatter(
-    x=common_idx,
-    y=verde_count[common_idx],
-    customdata=delta_series,
-    mode='lines+markers',
-    name='🟢 Verde',
-    line=dict(color='#10B981', width=3),
-    marker=dict(size=5),
-    hovertemplate=
-        '🟢 Verde: %{y:.0f}<br>' +
-        '📊 Spread: %{customdata:.0f}<extra></extra>'
-))
+        x=common_idx,
+        y=verde_count[common_idx],
+        mode='lines+markers',
+        name='🟢 Verde',
+        line=dict(color='#10B981', width=3, shape='spline', smoothing=1.1),
+        marker=dict(size=5, symbol='circle'),
+        fill='tozeroy',
+        fillcolor='rgba(16, 185, 129, 0.05)',
+        hovertemplate='%{y:.0f}<extra></extra>'
+    ))
 
     # 4. FLUXO BASE (Cinza)
     if linha_cinza is not None and not linha_cinza.empty:

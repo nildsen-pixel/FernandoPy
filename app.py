@@ -369,53 +369,40 @@ div[data-baseweb="button-group"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# --- ETAPA 2: CSS PARA PROTEGER O GRÁFICO ---
+# --- ETAPA 2: CSS PARA PROTEGER O GRÁFICO (CORRIGIDO - PRESERVA TOOLTIPS) ---
 st.markdown("""
 <style>
-/* PROTEÇÃO DO GRÁFICO - IMPEDE QUE DESAPAREÇA */
+/* PROTEÇÃO DO GRÁFICO - PRESERVA TOOLTIPS */
 .stPlotlyChart {
     pointer-events: auto !important;
     touch-action: auto !important;
-    user-select: auto !important;
-    -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Garante que o canvas do Plotly capture todos os eventos */
+/* Permite que o Plotly capture eventos de hover para tooltips */
 .stPlotlyChart .plotly .main-svg {
-    pointer-events: auto !important;
+    pointer-events: visiblePainted !important;
 }
 
-/* Previne desaparecimento durante interações */
-.stPlotlyChart:active,
-.stPlotlyChart:focus,
-.stPlotlyChart:hover {
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
+/* Bloqueia apenas cliques, mas mantém hover */
+.stPlotlyChart .plotly .bg {
+    pointer-events: none !important;
 }
 
-/* Mobile: garante rolagem suave sem sumir */
+/* Mantém tooltips funcionando */
+.stPlotlyChart .plotly .hoverlayer {
+    pointer-events: none !important;
+}
+
+.stPlotlyChart .plotly .hovertext {
+    pointer-events: none !important;
+}
+
+/* Para mobile: permite rolagem sem sumir */
 @media (max-width: 768px) {
     .stPlotlyChart {
         overflow: visible !important;
         touch-action: pan-x pan-y !important;
     }
-    
-    /* Remove qualquer transform que possa causar desaparecimento */
-    .stPlotlyChart > div {
-        transform: none !important;
-    }
-}
-
-/* Previne que o gráfico seja afetado por seleção de texto */
-.plotly .modebar {
-    pointer-events: auto !important;
-    z-index: 100 !important;
-}
-
-/* Mantém o gráfico estável durante scroll */
-.plotly .svg-container {
-    will-change: auto !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -626,63 +613,54 @@ window.addEventListener('load', function() {
 </script>
 """, height=0)
 
-# --- ETAPA 3: DESABILITAR CLIQUES NO GRÁFICO (MAS MANTER TOOLTIPS) ---
+# --- ETAPA 3: DESABILITAR APENAS CLIQUES (PRESERVA HOVER/TOOLTIPS) ---
 components.html("""
 <script>
-// Desabilita cliques no gráfico mas mantém hover/tooltips
-(function disableChartClicks() {
-    function disableClicksOnCharts() {
+// Apenas desabilita cliques, mantém hover e tooltips
+(function disableOnlyClicks() {
+    function setupCharts() {
         const charts = document.querySelectorAll('.stPlotlyChart');
         charts.forEach(chart => {
-            if (!chart.hasAttribute('data-click-disabled')) {
-                chart.setAttribute('data-click-disabled', 'true');
-                
-                // Encontra o elemento SVG do Plotly
-                const svgElement = chart.querySelector('.main-svg');
-                if (svgElement) {
-                    // Desabilita cliques mas mantém eventos de hover
-                    svgElement.style.pointerEvents = 'visibleStroke';
-                    // 'visibleStroke' permite hover mas bloqueia cliques em áreas vazias
-                    // Para bloquear TUDO exceto hover, use:
-                    // svgElement.style.pointerEvents = 'visiblePainted';
+            if (chart.hasAttribute('data-click-disabled')) return;
+            chart.setAttribute('data-click-disabled', 'true');
+            
+            // Encontra todos os elementos interativos do Plotly
+            const plotlyElements = chart.querySelectorAll('.plotly [data-unformatted]');
+            
+            // Remove apenas eventos de clique, mantém hover
+            const newChart = chart.cloneNode(true);
+            
+            // Bloqueia cliques mas NÃO bloqueia mousemove (necessário para tooltips)
+            chart.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }, true); // Use capture phase
+            
+            // Para mobile: bloqueia toque longo e tap
+            chart.addEventListener('touchstart', function(e) {
+                // Permite scroll com 1 dedo, bloqueia apenas se for tap
+                if (e.touches.length === 1 && !e.target.closest('.modebar')) {
+                    // Não previne completamente para não quebrar scroll
+                    // Apenas impede ação de clique
                 }
-                
-                // Bloqueia eventos de clique em todo o gráfico
-                chart.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                });
-                
-                // Para mobile: bloqueia toque (equivalente ao click)
-                chart.addEventListener('touchstart', function(e) {
-                    // Impede o clique/toque de agir no gráfico
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }, { passive: false });
-                
-                // IMPORTANTE: NÃO bloqueia mousemove e hover
-                // As tooltips continuam funcionando!
-                chart.addEventListener('mousemove', function(e) {
-                    // Permite hover para tooltips
-                    e.stopPropagation();
-                });
-            }
+            }, { passive: false });
+            
+            // IMPORTANTE: NÃO bloqueia mousemove - isso mantém tooltips
+            chart.addEventListener('mousemove', function(e) {
+                // Deixa passar para o Plotly
+                return true;
+            });
         });
     }
     
-    // Aplica quando o DOM carregar
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', disableClicksOnCharts);
+        document.addEventListener('DOMContentLoaded', setupCharts);
     } else {
-        disableClicksOnCharts();
+        setupCharts();
     }
     
-    // Observa por novos gráficos
-    const observer = new MutationObserver(function(mutations) {
-        disableClicksOnCharts();
-    });
+    const observer = new MutationObserver(() => setupCharts());
     observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>

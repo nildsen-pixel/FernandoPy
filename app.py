@@ -626,53 +626,62 @@ window.addEventListener('load', function() {
 </script>
 """, height=0)
 
-# --- ETAPA 3: PROTEÇÃO DE EVENTOS DO GRÁFICO ---
+# --- ETAPA 3: DESABILITAR CLIQUES NO GRÁFICO (MAS MANTER TOOLTIPS) ---
 components.html("""
 <script>
-// Protege os gráficos contra desaparecimento durante interações
-(function protectCharts() {
-    function fixChartInteractions() {
+// Desabilita cliques no gráfico mas mantém hover/tooltips
+(function disableChartClicks() {
+    function disableClicksOnCharts() {
         const charts = document.querySelectorAll('.stPlotlyChart');
         charts.forEach(chart => {
-            // Remove event listeners que podem causar desaparecimento
-            if (!chart.hasAttribute('data-protected')) {
-                chart.setAttribute('data-protected', 'true');
+            if (!chart.hasAttribute('data-click-disabled')) {
+                chart.setAttribute('data-click-disabled', 'true');
                 
-                // Previne comportamento padrão problemático
-                chart.addEventListener('mousedown', function(e) {
-                    // Permite botão direito normalmente, sem esconder o gráfico
+                // Encontra o elemento SVG do Plotly
+                const svgElement = chart.querySelector('.main-svg');
+                if (svgElement) {
+                    // Desabilita cliques mas mantém eventos de hover
+                    svgElement.style.pointerEvents = 'visibleStroke';
+                    // 'visibleStroke' permite hover mas bloqueia cliques em áreas vazias
+                    // Para bloquear TUDO exceto hover, use:
+                    // svgElement.style.pointerEvents = 'visiblePainted';
+                }
+                
+                // Bloqueia eventos de clique em todo o gráfico
+                chart.addEventListener('click', function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
+                    return false;
                 });
                 
-                chart.addEventListener('contextmenu', function(e) {
-                    // Permite menu de contexto, mas não esconde o gráfico
-                    e.stopPropagation();
-                    return true;
-                });
-                
-                // Protege para mobile
+                // Para mobile: bloqueia toque (equivalente ao click)
                 chart.addEventListener('touchstart', function(e) {
+                    // Impede o clique/toque de agir no gráfico
+                    e.preventDefault();
                     e.stopPropagation();
+                    return false;
                 }, { passive: false });
                 
-                chart.addEventListener('touchmove', function(e) {
-                    // Permite rolagem normalmente
+                // IMPORTANTE: NÃO bloqueia mousemove e hover
+                // As tooltips continuam funcionando!
+                chart.addEventListener('mousemove', function(e) {
+                    // Permite hover para tooltips
                     e.stopPropagation();
-                }, { passive: false });
+                });
             }
         });
     }
     
-    // Aplica proteção quando o DOM carregar
+    // Aplica quando o DOM carregar
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fixChartInteractions);
+        document.addEventListener('DOMContentLoaded', disableClicksOnCharts);
     } else {
-        fixChartInteractions();
+        disableClicksOnCharts();
     }
     
-    // Observa por novos gráficos adicionados
+    // Observa por novos gráficos
     const observer = new MutationObserver(function(mutations) {
-        fixChartInteractions();
+        disableClicksOnCharts();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 })();

@@ -371,15 +371,15 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # 1. SPREAD (Invisível, só para tooltip)
     fig.add_trace(go.Scatter(
-        x=common_idx,
-        y=verde_count[common_idx],
-        customdata=delta_series,
-        mode='lines',
-        name='📊 Spread',
-        line=dict(color='rgba(0,0,0,0)', width=0),
-        showlegend=False,
-        hovertemplate='📊 Spread: %{customdata:.0f}<extra></extra>'
-    ))
+    x=common_idx,
+    y=verde_count[common_idx],
+    customdata=delta_series,
+    mode='markers',
+    marker=dict(size=10, opacity=0),
+    name='📊 Spread',
+    showlegend=False,
+    hovertemplate='📊 Spread: %{customdata:.0f}<extra></extra>'
+))
 
     # 2. VERMELHA
     fig.add_trace(go.Scatter(

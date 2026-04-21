@@ -370,7 +370,39 @@ div[data-baseweb="button-group"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. INTERFACE PRINCIPAL ---
+# --- 5. SOLUÇÃO ALTERNATIVA RÁPIDA - FORÇA GRÁFICO VISÍVEL ---
+st.markdown("""
+<style>
+/* SOLUÇÃO RADICAL - FORÇA GRÁFICO VISÍVEL */
+.stPlotlyChart,
+.stPlotlyChart *,
+.js-plotly-plot,
+.plotly,
+.main-svg {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* Impede qualquer transform que possa esconder */
+.plotly .main-svg {
+    transform: translate3d(0,0,0) !important;
+}
+
+/* Para mobile - garante scroll */
+@media (max-width: 768px) {
+    .stPlotlyChart {
+        min-height: 400px !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- 6. INTERFACE PRINCIPAL ---
 st_autorefresh(interval=60000, key="data_refresh")
 datas_disponiveis = gerar_dias_uteis()
 
@@ -525,10 +557,16 @@ updateClock();
 </script>
 """, height=0)
 
-# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (CORRIGIDO) ---
 components.html("""
 <script>
+// Flag para evitar múltiplas execuções
+let isResizing = false;
+
 function resizeChartsForMobile() {
+    if (isResizing) return;
+    isResizing = true;
+    
     setTimeout(function() {
         var isMobile = window.innerWidth <= 768;
         var charts = document.querySelectorAll('.stPlotlyChart');
@@ -538,40 +576,89 @@ function resizeChartsForMobile() {
         var headerHeight = isMobile ? 180 : 300;
         var newHeight = windowHeight - headerHeight;
         
+        // Garante altura mínima
+        newHeight = Math.max(newHeight, 300);
+        
         charts.forEach(function(chart) {
             if (chart && chart.style) {
-                // Força altura exata
-                chart.style.height = newHeight + 'px';
-                chart.style.minHeight = newHeight + 'px';
-                chart.style.maxHeight = newHeight + 'px';
-                
-                // Redimensiona o Plotly se existir
-                if (chart.children[0] && chart.children[0]._fullLayout) {
-                    try {
-                        Plotly.relayout(chart.children[0], {
-                            autosize: true,
-                            height: newHeight
-                        });
-                    } catch(e) {
-                        console.log("Plotly not ready yet");
-                    }
+                // Aplica altura apenas se for diferente da atual para evitar loops
+                var currentHeight = parseInt(chart.style.height);
+                if (currentHeight !== newHeight) {
+                    chart.style.height = newHeight + 'px';
+                    chart.style.minHeight = newHeight + 'px';
+                    chart.style.maxHeight = newHeight + 'px';
                 }
             }
         });
-    }, 200);
+        
+        isResizing = false;
+    }, 100);
 }
 
-// Executa no carregamento e redimensionamento
-window.addEventListener('load', resizeChartsForMobile);
+// Executa apenas no load e resize com debounce
+let resizeTimeout;
 window.addEventListener('resize', function() {
-    setTimeout(resizeChartsForMobile, 150);
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resizeChartsForMobile, 250);
 });
 
-// Força redimensionamento quando a aba muda
-var observer = new MutationObserver(function(mutations) {
-    resizeChartsForMobile();
+// Executa uma única vez no load
+window.addEventListener('load', function() {
+    setTimeout(resizeChartsForMobile, 300);
 });
-observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+</script>
+""", height=0)
+
+# --- PROTEÇÃO DE EVENTOS DO GRÁFICO ---
+components.html("""
+<script>
+// Protege os gráficos contra desaparecimento durante interações
+(function protectCharts() {
+    function fixChartInteractions() {
+        const charts = document.querySelectorAll('.stPlotlyChart');
+        charts.forEach(chart => {
+            // Remove event listeners que podem causar desaparecimento
+            if (!chart.hasAttribute('data-protected')) {
+                chart.setAttribute('data-protected', 'true');
+                
+                // Previne comportamento padrão problemático
+                chart.addEventListener('mousedown', function(e) {
+                    // Permite botão direito normalmente, sem esconder o gráfico
+                    e.stopPropagation();
+                });
+                
+                chart.addEventListener('contextmenu', function(e) {
+                    // Permite menu de contexto, mas não esconde o gráfico
+                    e.stopPropagation();
+                    return true;
+                });
+                
+                // Protege para mobile
+                chart.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                }, { passive: false });
+                
+                chart.addEventListener('touchmove', function(e) {
+                    // Permite rolagem normalmente
+                    e.stopPropagation();
+                }, { passive: false });
+            }
+        });
+    }
+    
+    // Aplica proteção quando o DOM carregar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixChartInteractions);
+    } else {
+        fixChartInteractions();
+    }
+    
+    // Observa por novos gráficos adicionados
+    const observer = new MutationObserver(function(mutations) {
+        fixChartInteractions();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
 </script>
 """, height=0)
 

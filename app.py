@@ -350,12 +350,13 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
     border-radius: 0;
     background: transparent !important;
     color: #94A3B8 !important; /* sua cor original */
-    border-bottom: 2px solid #4bdede !important;
+    border: 2px solid #4bdede !important;
 }
 
 /* Hover */
 div[data-baseweb="button-group"] button:hover {
     background: #d6d6c3 !important;
+    color: #212929 !important;
     /* border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important; */
 }
 

@@ -348,9 +348,9 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
     padding: 0.5rem 1.2rem;
     margin: 0;
     border-radius: 0;
-    background: #4bdede !important;
+    background: linear-gradient(90deg, #227d7d, #1fb5b5); !important;
     color: #212929 !important; /* sua cor original */
-    /* border: 2px solid #4bdede !important; */
+    border: 2px solid transparent !important;
 }
 
 /* Hover */

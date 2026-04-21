@@ -371,15 +371,15 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # 1. SPREAD (Invisível, só para tooltip)
     fig.add_trace(go.Scatter(
-    x=common_idx,
-    y=verde_count[common_idx],
-    customdata=delta_series,
-    mode='markers',
-    marker=dict(size=10, opacity=0),
-    name='📊 Spread',
-    showlegend=False,
-    hovertemplate='📊 Spread: %{customdata:.0f}<extra></extra>'
-))
+        x=common_idx,
+        y=verde_count[common_idx],
+        customdata=delta_series,
+        mode='lines',
+        name='📊 Spread',
+        line=dict(color='rgba(0,0,0,0)', width=0),
+        showlegend=False,
+        hovertemplate='📊 Spread: %{customdata:.0f}<extra></extra>'
+    ))
 
     # 2. VERMELHA
     fig.add_trace(go.Scatter(
@@ -465,11 +465,6 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # LAYOUT DO GRÁFICO
     fig.update_layout(
-        autosize=True,  # Importante: autosize True
-        height=None,    # Remove altura fixa
-        margin=dict(l=10, r=10, t=40, b=10),  # Margens reduzidas
-        dragmode=False,
-        clickmode="none",
         hovermode='x unified',
         hoverlabel=dict(
             bgcolor="#1E293B",
@@ -477,7 +472,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             bordercolor="rgba(255,255,255,0.2)",
             align="left"
         ),
-        #height=380,
+        height=380,
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -490,7 +485,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        #margin=dict(l=10, r=50, t=30, b=20),
+        margin=dict(l=10, r=50, t=30, b=20),
         xaxis=dict(
             showgrid=True,
             gridcolor='rgba(255,255,255,0.1)',
@@ -525,6 +520,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
                 (rastro_azul.max() * 1.2 if not rastro_azul.empty else 75)
             ]
         ),
+        autosize=True,
         width=None
     )
     
@@ -541,13 +537,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         theme=None,
         config={
             'displayModeBar': False,
-            "staticPlot": False,
             'scrollZoom': False,
             'displaylogo': False,
-            "doubleClick": False,
-            "editable": False,
-            "showAxisDragHandles": False,
-            "showAxisRangeEntryBoxes": False,
             'responsive': True
         }
     )

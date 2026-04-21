@@ -10,41 +10,31 @@ from pathlib import Path
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 import requests
+from datetime import datetime
 
-# NOTA: Assumindo que os imports abaixo existem no ambiente original do usuário
-# Caso contrário, o código precisará de ajustes nos mocks de dados.
-try:
-    from tab_grafico import render_grafico
-    from tab_backtest import render_backtest
-    from tab_heatmap import render_heatmap
-    from helpers import (
-        VERDE_TICKERS, VERMELHA_TICKERS, TODOS_TICKERS, BRT,
-        get_historico_base, get_dados_recentes, ativos, fetch_mxn_brl,
-        gerar_dias_uteis, ultimo_candle_real, fetch_di_variacao, checar_e_enviar_alerta_di
-    )
-except ImportError:
-    # Mocks para evitar erro de execução durante o desenvolvimento se os arquivos não estiverem presentes
-    BRT = pytz.timezone('America/Sao_Paulo')
-    def gerar_dias_uteis(): return [datetime.now(tz=BRT).date()]
-    def fetch_di_variacao(ticker, name): return 0.0
-    def checar_e_enviar_alerta_di(name, val): return ""
-    def ativos(tickers, start, end, modo): return 0
-    def render_grafico(start, end, placeholder): st.info("Gráfico será renderizado aqui")
-    def render_backtest(start, end): st.info("Backtest será renderizado aqui")
-    def render_heatmap(start, end): st.info("Heatmap será renderizado aqui")
-    VERDE_TICKERS = []
-    VERMELHA_TICKERS = []
+# Imports das abas
+from tab_grafico import render_grafico
+from tab_backtest import render_backtest
+from tab_heatmap import render_heatmap
+
+# Imports dos helpers
+from helpers import (
+    VERDE_TICKERS, VERMELHA_TICKERS, TODOS_TICKERS, BRT,
+    get_historico_base, get_dados_recentes, ativos, fetch_mxn_brl,
+    gerar_dias_uteis, ultimo_candle_real, fetch_di_variacao, checar_e_enviar_alerta_di
+)
+
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
     page_title="Trend Axis WDO",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # --- 2. SISTEMA DE BACKGROUND ---
-bg_file = Path(__file__).parent / "upload" / "fundo.png"
+bg_file = Path(__file__).with_name("fundo.png")
 if bg_file.exists():
     try:
         with open(bg_file, "rb") as img_file:
@@ -63,7 +53,7 @@ if bg_file.exists():
                 background-repeat: no-repeat;
                 background-position: center center;
                 background-size: cover;
-                filter: blur(15px) brightness(0.25);
+                filter: blur(10px) brightness(0.3);
                 z-index: -1;
                 pointer-events: none;
             }}
@@ -74,114 +64,317 @@ if bg_file.exists():
     except Exception:
         pass
 
-# --- 3. CSS GLOBAL E MELHORIAS DE COMPONENTES ---
+# --- 3. CSS PRINCIPAL COM FOCO EM DISPOSITIVOS MÓVEIS ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap');
-
-:root {
-    --bg-card: rgba(30, 41, 59, 0.7);
-    --border-card: rgba(255, 255, 255, 0.1);
-    --accent-color: #3B82F6;
-    --text-main: #F8FAFC;
-    --text-muted: #94A3B8;
-}
-
 * { 
     font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
 }
 
-/* Ajustes Gerais de Layout */
+/* Reset e configurações base - OTIMIZADO PARA MOBILE */
 .block-container { 
-    padding: 1rem 2rem !important;
+    padding-top: 0.25rem !important; 
+    padding-bottom: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
     max-width: 100% !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-header { visibility: hidden; }
-
-/* Estilização de Cards de Indicadores */
-.metric-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-card);
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    backdrop-filter: blur(8px);
-    transition: transform 0.2s ease;
+/* Remove espaçamento extra */
+.main > div {
+    padding-top: 0 !important;
 }
 
-.metric-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.2);
+/* Esconde o header padrão do Streamlit */
+header {
+    display: none !important;
 }
 
-.metric-label {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
+/* Sidebar responsiva */
+[data-testid="stSidebar"] {
+    min-width: 200px !important;
+    width: auto !important;
+    max-width: 250px !important;
+    background-color: rgba(11, 15, 25, 0.95) !important;
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255,255,255,0.05);
 }
 
-.metric-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    font-family: 'Orbitron', sans-serif;
-}
-
-/* Estilização das Abas (Pills) */
-div[data-baseweb="button-group"] {
-    background: rgba(15, 23, 42, 0.6);
-    padding: 4px;
-    border-radius: 12px;
-    border: 1px solid var(--border-card);
-    margin-bottom: 20px;
-}
-
-div[data-baseweb="button-group"] button {
-    border: none !important;
-    background: transparent !important;
-    color: var(--text-muted) !important;
-    border-radius: 8px !important;
-    transition: all 0.3s ease !important;
-    font-weight: 500 !important;
-}
-
-div[data-baseweb="button-group"] button[aria-selected="true"] {
-    background: var(--accent-color) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* Melhoria no Popover de Período */
-.stPopover button {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-card) !important;
-    border-radius: 8px !important;
-    color: var(--text-main) !important;
-}
-
-/* Customização do Relógio */
-#digital-clock {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--accent-color);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-/* Ajustes para Mobile */
+/* Ajuste para telas pequenas */
 @media (max-width: 768px) {
-    .block-container { padding: 0.5rem !important; }
-    .modern-title { font-size: 1.2rem !important; }
-    .stColumns { gap: 0.5rem !important; }
+    [data-testid="stSidebar"] {
+        min-width: 100% !important;
+        max-width: 100% !important;
+        position: fixed !important;
+        z-index: 999 !important;
+        height: 100vh !important;
+    }
+    
+    .block-container {
+        padding-top: 0.25rem !important;
+        margin-top: 0 !important;
+    }
+}
+
+/* CONFIGURAÇÃO DO GRÁFICO PARA MOBILE */
+.stPlotlyChart {
+    width: 100% !important;
+    height: auto !important;
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.stPlotlyChart > div {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .stPlotlyChart,
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 300px) !important;
+    }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .stPlotlyChart,
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 280px) !important;
+    }
+}
+
+/* Mobile - O MAIS IMPORTANTE */
+@media (max-width: 767px) {
+    .stPlotlyChart,
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 220px) !important;
+        height: calc(100vh - 220px) !important;
+        max-height: calc(100vh - 220px) !important;
+    }
+    
+    /* Força o container a não ter scroll */
+    .main .block-container {
+        overflow-y: visible !important;
+        height: auto !important;
+    }
+}
+
+/* Ajuste para mobile muito pequeno */
+@media (max-width: 480px) {
+    .stPlotlyChart,
+    .stPlotlyChart > div {
+        min-height: calc(100vh - 200px) !important;
+        height: calc(100vh - 200px) !important;
+        max-height: calc(100vh - 200px) !important;
+    }
+}
+
+/* Container flexível */
+div[data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Container do gráfico ocupa todo espaço */
+.element-container:has(.stPlotlyChart) {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Títulos responsivos */
+.modern-title {
+    font-size: clamp(1rem, 4vw, 2rem) !important;
+    margin: 0 !important;
+}
+
+.title-date {
+    font-size: clamp(0.7rem, 3vw, 1.2rem) !important;
+    margin-left: 8px !important;
+}
+
+/* Remove scroll horizontal */
+.main {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Esconde scroll vertical desnecessário */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 4. LÓGICA DE DADOS ---
+# --- 4. CSS PARA O CABEÇALHO (RESPONSIVO) ---
+st.markdown("""
+<style>
+/* Fixa o layout das colunas */
+div[data-testid="column"] {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0 !important;
+}
+
+.stColumns {
+    flex-wrap: nowrap !important;
+    min-width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    gap: 0.5rem !important;
+}
+
+/* Larguras responsivas para colunas */
+.stColumns > div:nth-child(1) { 
+    min-width: 180px !important; 
+    max-width: 280px !important; 
+}
+
+.stColumns > div:nth-child(2) { 
+    min-width: 100px !important; 
+    max-width: 130px !important; 
+}
+
+.stColumns > div:nth-child(3) { 
+    min-width: 80px !important; 
+    max-width: 95px !important; 
+}
+
+.stColumns > div:nth-child(4) { 
+    min-width: 80px !important; 
+    max-width: 95px !important; 
+}
+
+.stColumns > div:nth-child(5) { 
+    min-width: 150px !important; 
+    flex: 1 !important;
+}
+
+/* Cards DI responsivos */
+div[style*="text-align: center; background-color: #1E293B"] {
+    min-width: 70px !important;
+    padding: 6px 4px !important;
+}
+
+div[style*="text-align: center; background-color: #1E293B"] > div:first-child {
+    font-size: 10px !important;
+}
+
+div[style*="text-align: center; background-color: #1E293B"] > div:last-child {
+    font-size: 14px !important;
+}
+
+/* Popover responsivo */
+.stPopover {
+    min-width: 100px !important;
+}
+
+.stPopover button {
+    width: 100% !important;
+    min-width: 100px !important;
+    color: #94A3B8 !important;
+    background-color: #1E293B !important;
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+}
+
+/* Mobile: cabeçalho com scroll horizontal */
+@media (max-width: 768px) {
+    .stColumns {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        gap: 0.25rem !important;
+    }
+    
+    .stColumns > div {
+        display: inline-block !important;
+        float: none !important;
+    }
+    
+    /* Reduz ainda mais em mobile pequeno */
+    .stColumns > div:nth-child(1) { min-width: 150px !important; }
+    .stColumns > div:nth-child(2) { min-width: 90px !important; }
+    .stColumns > div:nth-child(3) { min-width: 70px !important; }
+    .stColumns > div:nth-child(4) { min-width: 70px !important; }
+    .stColumns > div:nth-child(5) { min-width: 120px !important; }
+}
+
+@media (max-width: 480px) {
+    .stColumns > div:nth-child(1) { min-width: 130px !important; }
+    .stColumns > div:nth-child(2) { min-width: 80px !important; }
+    .stColumns > div:nth-child(3) { min-width: 65px !important; }
+    .stColumns > div:nth-child(4) { min-width: 65px !important; }
+}
+
+/* CSS PARA ESTILIZAR OS PILLS COMO ABAS (VERSÃO CORRIGIDA) */
+
+/* Container */
+div[data-baseweb="button-group"] {
+    gap: 0;
+    border-bottom: 1px solid #3E3E3E;
+    margin-bottom: 1.5rem;
+}
+
+/* Botões (estado padrão) */
+div[data-baseweb="button-group"] button[kind="pills"] {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
+    background: transparent !important;
+    border-bottom: 2px solid transparent !important;
+    color: #94A3B8 !important;
+}
+
+/* Botão ativo */
+div[data-baseweb="button-group"] button[kind="pillsActive"] {
+    padding: 0.5rem 1.2rem;
+    margin: 0;
+    border-radius: 0;
+    background: linear-gradient(90deg, #364040, #526666); !important;
+    color: #e0e0d1 !important; /* sua cor original */
+    border: 2px solid transparent !important;
+}
+
+/* Hover */
+div[data-baseweb="button-group"] button:hover {
+    background: #d6d6c3 !important;
+    color: #212929 !important;
+    /* border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important; */
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    div[data-baseweb="button-group"] button {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.85rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- 5. INTERFACE PRINCIPAL ---
 st_autorefresh(interval=60000, key="data_refresh")
 datas_disponiveis = gerar_dias_uteis()
 
+# --- CONTROLE DE ATUALIZAÇÃO DOS DADOS (60s) ---
 if "last_data_update" not in st.session_state:
     st.session_state.last_data_update = datetime.now()
     atualizar_dados = True
@@ -190,135 +383,201 @@ else:
 
 if atualizar_dados:
     st.session_state.last_data_update = datetime.now()
-    with st.spinner("Atualizando indicadores..."):
+    
+    with st.spinner(""):
         di_34 = fetch_di_variacao("BMFBOVESPA:DI1F2034", "DI1F34")
         di_35 = fetch_di_variacao("BMFBOVESPA:DI1F2035", "DI1F35")
+    
     st.session_state.di_34 = di_34
     st.session_state.di_35 = di_35
 else:
     di_34 = st.session_state.get("di_34", 0)
     di_35 = st.session_state.get("di_35", 0)
 
-# --- 5. CABEÇALHO REORGANIZADO ---
-# Usando colunas para melhor distribuição espacial
-c_tit, c_spacer, c_di34, c_di35, c_periodo = st.columns([1.5, 0.5, 0.8, 0.8, 1])
+di_variacao = di_34
+cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
+cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
+
+# Define colunas
+c_tit, c_fd1, c_di34, c_di35, c_dados = st.columns([280, 130, 95, 95, 400])
 
 with c_tit:
-    st.markdown(f"""
-    <div style='display: flex; flex-direction: column;'>
-        <h1 class='modern-title' style='margin: 0; color: white; font-size: 1.8rem; font-weight: 800;'>
-            TREND AXIS
-        </h1>
-        <div id='digital-clock' style='font-size: 1.1rem; font-weight: 500; margin-top: -5px;'>
-            --:--:--
-        </div>
-    </div>
+    st.markdown("""
+    <h1 class='modern-title' style='text-align: left; display: flex; align-items: center; margin: 0; padding: 0; white-space: nowrap;'>
+        TREND AXIS
+        <span id='digital-clock' class='title-date' style='margin-left: 8px; color: #94A3B8; white-space: nowrap;'>| --:--:--</span>
+    </h1>
     """, unsafe_allow_html=True)
+
+with c_fd1:
+    with st.popover("📅 Período", width='stretch'):
+        start_date = st.selectbox(
+            "📅 Início",
+            options=datas_disponiveis,
+            format_func=lambda d: "Hoje" if str(d) == str(pd.Timestamp.now(tz=BRT).date()) else pd.to_datetime(d).strftime("%d/%m/%y"),
+            index=0,
+            key="start_date_fixed"
+        )
+        start_time = st.time_input("🕐 Hora Início", value=time(0, 0), key="start_time_fixed")
+        
+        end_date = st.selectbox(
+            "📅 Fim",
+            options=datas_disponiveis,
+            format_func=lambda d: "Hoje" if str(d) == str(pd.Timestamp.now(tz=BRT).date()) else pd.to_datetime(d).strftime("%d/%m/%y"),
+            index=0,
+            key="end_date_fixed"
+        )
+        end_time = st.time_input("🕐 Hora Fim", value=time(23, 59), key="end_time_fixed")
 
 animacao_34 = checar_e_enviar_alerta_di("DI34", di_34)
 animacao_35 = checar_e_enviar_alerta_di("DI35", di_35)
 
 with c_di34:
-    cor_34 = "#10B981" if di_34 >= 0 else "#EF4444"
     st.markdown(f"""
-    <div class="metric-card" style="{animacao_34}">
-        <div class="metric-label">DI1F34</div>
-        <div class="metric-value" style="color: {cor_34};">{di_34:+.2f}%</div>
+    <div style='text-align: center; background-color: #1E293B; padding: 8px 4px; border-radius: 8px; {animacao_34}; width: 100%; box-sizing: border-box;'>
+        <div style='color: #94A3B8; font-size: 10px; font-weight: 600; white-space: nowrap;'>DI1F34</div>
+        <div style='color: {cor_34}; font-size: 14px; font-weight: bold; white-space: nowrap;'>{di_34:+.2f}%</div>
     </div>
     """, unsafe_allow_html=True)
 
 with c_di35:
-    cor_35 = "#10B981" if di_35 >= 0 else "#EF4444"
     st.markdown(f"""
-    <div class="metric-card" style="{animacao_35}">
-        <div class="metric-label">DI1F35</div>
-        <div class="metric-value" style="color: {cor_35};">{di_35:+.2f}%</div>
+    <div style='text-align: center; background-color: #1E293B; padding: 8px 4px; border-radius: 8px; {animacao_35}; width: 100%; box-sizing: border-box;'>
+        <div style='color: #94A3B8; font-size: 10px; font-weight: 600; white-space: nowrap;'>DI1F35</div>
+        <div style='color: {cor_35}; font-size: 14px; font-weight: bold; white-space: nowrap;'>{di_35:+.2f}%</div>
     </div>
     """, unsafe_allow_html=True)
 
-with c_periodo:
-    with st.popover("📅 Configurar Período", use_container_width=True):
-        st.subheader("Intervalo de Tempo")
-        start_date = st.selectbox("Início", options=datas_disponiveis, index=0, key="sd")
-        start_time = st.time_input("Hora Início", value=time(9, 0), key="st")
-        st.divider()
-        end_date = st.selectbox("Fim", options=datas_disponiveis, index=0, key="ed")
-        end_time = st.time_input("Hora Fim", value=time(18, 0), key="et")
+placeholder_dados = c_dados.empty()
 
-# --- 6. INDICADORES DE FLUXO (VERDE/VERMELHA/AZUL) ---
 start_dt = pd.Timestamp(f"{start_date} {start_time}").tz_localize(BRT)
 end_dt = pd.Timestamp(f"{end_date} {end_time}").tz_localize(BRT)
-if start_dt > end_dt: start_dt, end_dt = end_dt, start_dt
+
+if start_dt > end_dt:
+    start_dt, end_dt = end_dt, start_dt
 
 if atualizar_dados:
     verde_count = ativos(VERDE_TICKERS, start_dt, end_dt, modo='alta')
     vermelha_count = ativos(VERMELHA_TICKERS, start_dt, end_dt, modo='baixa')
+
     st.session_state.verde_count = verde_count
     st.session_state.vermelha_count = vermelha_count
 else:
     verde_count = st.session_state.get("verde_count", 0)
     vermelha_count = st.session_state.get("vermelha_count", 0)
 
-# Linha de resumo de ativos (Nova Seção)
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown(f"<div class='metric-card'><div class='metric-label'>Ativos em Alta</div><div class='metric-value' style='color: #10B981;'>{verde_count}</div></div>", unsafe_allow_html=True)
-with c2:
-    st.markdown(f"<div class='metric-card'><div class='metric-label'>Ativos em Baixa</div><div class='metric-value' style='color: #EF4444;'>{vermelha_count}</div></div>", unsafe_allow_html=True)
-with c3:
-    diff = verde_count - vermelha_count
-    cor_diff = "#10B981" if diff >= 0 else "#EF4444"
-    st.markdown(f"<div class='metric-card'><div class='metric-label'>Saldo Δ</div><div class='metric-value' style='color: {cor_diff};'>{diff:+}</div></div>", unsafe_allow_html=True)
-with c4:
-    st.markdown(f"<div class='metric-card'><div class='metric-label'>Status</div><div class='metric-value' style='color: #3B82F6;'>ATIVO</div></div>", unsafe_allow_html=True)
+# --- CONTROLE DE ABA ATIVA (SOLUÇÃO PILLS - MODERNA) ---
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "📈 Gráfico"
 
-st.markdown("<br>", unsafe_allow_html=True)
-
-# --- 7. NAVEGAÇÃO E CONTEÚDO ---
+# Opções das abas
 opcoes_abas = ["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"]
+
+# Garantir que o valor atual seja válido
+if st.session_state.active_tab not in opcoes_abas:
+    st.session_state.active_tab = opcoes_abas[0]
+
+# Usar pills (requer Streamlit >= 1.30)
+# O st.pills retorna o valor selecionado diretamente quando selection_mode="single"
 aba_selecionada = st.pills(
-    "Navegação",
+    "Selecione a aba:",
     options=opcoes_abas,
     selection_mode="single",
-    default=st.session_state.get("active_tab", opcoes_abas[0]),
+    default=st.session_state.active_tab,
     label_visibility="collapsed"
 )
-st.session_state.active_tab = aba_selecionada
 
-# Placeholder para dados específicos da aba de gráfico
-placeholder_dados = st.empty()
+# Atualiza session_state se uma aba foi selecionada
+if aba_selecionada:
+    st.session_state.active_tab = aba_selecionada
 
-# Renderização condicional
-if aba_selecionada == "📈 Gráfico":
+# Linha divisória sutil
+st.markdown('<hr style="margin: 0.5rem 0 1.5rem 0; opacity: 0.2;">', unsafe_allow_html=True)
+
+# --- RENDERIZAR APENAS A ABA SELECIONADA ---
+if st.session_state.active_tab == "📈 Gráfico":
     render_grafico(start_dt, end_dt, placeholder_dados)
-elif aba_selecionada == "🎯 Backtest de Correlação":
+elif st.session_state.active_tab == "🎯 Backtest de Correlação":
     render_backtest(start_dt, end_dt)
-elif aba_selecionada == "🔥 Mapa de Calor Abertura":
+elif st.session_state.active_tab == "🔥 Mapa de Calor Abertura":
     render_heatmap(start_dt, end_dt)
 
-# --- 8. SCRIPTS (Relógio e Ajustes) ---
+# --- RELÓGIO JS ---
 components.html("""
 <script>
 function updateClock() {
     const now = new Date();
-    const timeString = now.toLocaleTimeString('pt-BR', {
+    const options = {
         timeZone: 'America/Sao_Paulo',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
         hour12: false
-    });
+    };
+    const timeString = now.toLocaleTimeString('pt-BR', options);
     const clockElement = window.parent.document.querySelector('#digital-clock');
-    if (clockElement) clockElement.innerText = timeString;
+    if (clockElement) {
+        clockElement.innerText = '| ' + timeString;
+    }
 }
 setInterval(updateClock, 1000);
 updateClock();
-
-// Ajuste automático de altura para o gráfico
-function adjustChartHeight() {
-    const charts = window.parent.document.querySelectorAll('.stPlotlyChart');
-    charts.forEach(chart => {
-        chart.style.height = 'calc(100vh - 400px)';
-    });
-}
-setTimeout(adjustChartHeight, 1000);
 </script>
 """, height=0)
+
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
+components.html("""
+<script>
+function resizeChartsForMobile() {
+    setTimeout(function() {
+        var isMobile = window.innerWidth <= 768;
+        var charts = document.querySelectorAll('.stPlotlyChart');
+        var windowHeight = window.innerHeight;
+        
+        // Calcula altura disponível baseado no dispositivo
+        var headerHeight = isMobile ? 180 : 300;
+        var newHeight = windowHeight - headerHeight;
+        
+        charts.forEach(function(chart) {
+            if (chart && chart.style) {
+                // Força altura exata
+                chart.style.height = newHeight + 'px';
+                chart.style.minHeight = newHeight + 'px';
+                chart.style.maxHeight = newHeight + 'px';
+                
+                // Redimensiona o Plotly se existir
+                if (chart.children[0] && chart.children[0]._fullLayout) {
+                    try {
+                        Plotly.relayout(chart.children[0], {
+                            autosize: true,
+                            height: newHeight
+                        });
+                    } catch(e) {
+                        console.log("Plotly not ready yet");
+                    }
+                }
+            }
+        });
+    }, 200);
+}
+
+// Executa no carregamento e redimensionamento
+window.addEventListener('load', resizeChartsForMobile);
+window.addEventListener('resize', function() {
+    setTimeout(resizeChartsForMobile, 150);
+});
+
+// Força redimensionamento quando a aba muda
+var observer = new MutationObserver(function(mutations) {
+    resizeChartsForMobile();
+});
+observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+</script>
+""", height=0)
+
+# Função principal
+def main():
+    pass
+
+if __name__ == "__main__":
+    main()

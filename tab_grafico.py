@@ -468,6 +468,8 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         autosize=True,  # Importante: autosize True
         height=None,    # Remove altura fixa
         margin=dict(l=10, r=10, t=40, b=10),  # Margens reduzidas
+        dragmode=False,
+        clickmode="none",
         hovermode='x unified',
         hoverlabel=dict(
             bgcolor="#1E293B",
@@ -539,8 +541,13 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         theme=None,
         config={
             'displayModeBar': False,
+            "staticPlot": False,
             'scrollZoom': False,
             'displaylogo': False,
+            "doubleClick": False,
+            "editable": False,
+            "showAxisDragHandles": False,
+            "showAxisRangeEntryBoxes": False,
             'responsive': True
         }
     )

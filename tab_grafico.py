@@ -475,7 +475,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             bordercolor="rgba(255,255,255,0.2)",
             align="left"
         ),
-        height=380,
+        #height=380,
         showlegend=True,
         legend=dict(
             orientation="h",
@@ -488,7 +488,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         ),
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=10, r=50, t=30, b=20),
+        #margin=dict(l=10, r=50, t=30, b=20),
         xaxis=dict(
             showgrid=True,
             gridcolor='rgba(255,255,255,0.1)',
@@ -523,7 +523,6 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
                 (rastro_azul.max() * 1.2 if not rastro_azul.empty else 75)
             ]
         ),
-        autosize=True,
         width=None
     )
     

@@ -349,7 +349,7 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
     margin: 0;
     border-radius: 0;
     background: linear-gradient(90deg, #364040, #526666); !important;
-    color: #e0e0d1 !important;
+    color: #e0e0d1 !important; /* sua cor original */
     border: 2px solid transparent !important;
 }
 
@@ -357,6 +357,7 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
 div[data-baseweb="button-group"] button:hover {
     background: #d6d6c3 !important;
     color: #212929 !important;
+    /* border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important; */
 }
 
 /* Mobile */
@@ -364,44 +365,6 @@ div[data-baseweb="button-group"] button:hover {
     div[data-baseweb="button-group"] button {
         padding: 0.4rem 0.8rem !important;
         font-size: 0.85rem !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-# --- ETAPA 2: CSS PARA PROTEGER O GRÁFICO (CORRIGIDO - PRESERVA TOOLTIPS) ---
-st.markdown("""
-<style>
-/* PROTEÇÃO DO GRÁFICO - PRESERVA TOOLTIPS */
-.stPlotlyChart {
-    pointer-events: auto !important;
-    touch-action: auto !important;
-}
-
-/* Permite que o Plotly capture eventos de hover para tooltips */
-.stPlotlyChart .plotly .main-svg {
-    pointer-events: visiblePainted !important;
-}
-
-/* Bloqueia apenas cliques, mas mantém hover */
-.stPlotlyChart .plotly .bg {
-    pointer-events: none !important;
-}
-
-/* Mantém tooltips funcionando */
-.stPlotlyChart .plotly .hoverlayer {
-    pointer-events: none !important;
-}
-
-.stPlotlyChart .plotly .hovertext {
-    pointer-events: none !important;
-}
-
-/* Para mobile: permite rolagem sem sumir */
-@media (max-width: 768px) {
-    .stPlotlyChart {
-        overflow: visible !important;
-        touch-action: pan-x pan-y !important;
     }
 }
 </style>
@@ -515,6 +478,7 @@ if st.session_state.active_tab not in opcoes_abas:
     st.session_state.active_tab = opcoes_abas[0]
 
 # Usar pills (requer Streamlit >= 1.30)
+# O st.pills retorna o valor selecionado diretamente quando selection_mode="single"
 aba_selecionada = st.pills(
     "Selecione a aba:",
     options=opcoes_abas,
@@ -561,16 +525,10 @@ updateClock();
 </script>
 """, height=0)
 
-# --- ETAPA 1: JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (CORRIGIDO) ---
+# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE ---
 components.html("""
 <script>
-// Flag para evitar múltiplas execuções
-let isResizing = false;
-
 function resizeChartsForMobile() {
-    if (isResizing) return;
-    isResizing = true;
-    
     setTimeout(function() {
         var isMobile = window.innerWidth <= 768;
         var charts = document.querySelectorAll('.stPlotlyChart');
@@ -580,89 +538,40 @@ function resizeChartsForMobile() {
         var headerHeight = isMobile ? 180 : 300;
         var newHeight = windowHeight - headerHeight;
         
-        // Garante altura mínima
-        newHeight = Math.max(newHeight, 300);
-        
         charts.forEach(function(chart) {
             if (chart && chart.style) {
-                // Aplica altura apenas se for diferente da atual para evitar loops
-                var currentHeight = parseInt(chart.style.height);
-                if (currentHeight !== newHeight) {
-                    chart.style.height = newHeight + 'px';
-                    chart.style.minHeight = newHeight + 'px';
-                    chart.style.maxHeight = newHeight + 'px';
+                // Força altura exata
+                chart.style.height = newHeight + 'px';
+                chart.style.minHeight = newHeight + 'px';
+                chart.style.maxHeight = newHeight + 'px';
+                
+                // Redimensiona o Plotly se existir
+                if (chart.children[0] && chart.children[0]._fullLayout) {
+                    try {
+                        Plotly.relayout(chart.children[0], {
+                            autosize: true,
+                            height: newHeight
+                        });
+                    } catch(e) {
+                        console.log("Plotly not ready yet");
+                    }
                 }
             }
         });
-        
-        isResizing = false;
-    }, 100);
+    }, 200);
 }
 
-// Executa apenas no load e resize com debounce
-let resizeTimeout;
+// Executa no carregamento e redimensionamento
+window.addEventListener('load', resizeChartsForMobile);
 window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(resizeChartsForMobile, 250);
+    setTimeout(resizeChartsForMobile, 150);
 });
 
-// Executa uma única vez no load
-window.addEventListener('load', function() {
-    setTimeout(resizeChartsForMobile, 300);
+// Força redimensionamento quando a aba muda
+var observer = new MutationObserver(function(mutations) {
+    resizeChartsForMobile();
 });
-</script>
-""", height=0)
-
-# --- ETAPA 3: DESABILITAR APENAS CLIQUES (PRESERVA HOVER/TOOLTIPS) ---
-components.html("""
-<script>
-// Apenas desabilita cliques, mantém hover e tooltips
-(function disableOnlyClicks() {
-    function setupCharts() {
-        const charts = document.querySelectorAll('.stPlotlyChart');
-        charts.forEach(chart => {
-            if (chart.hasAttribute('data-click-disabled')) return;
-            chart.setAttribute('data-click-disabled', 'true');
-            
-            // Encontra todos os elementos interativos do Plotly
-            const plotlyElements = chart.querySelectorAll('.plotly [data-unformatted]');
-            
-            // Remove apenas eventos de clique, mantém hover
-            const newChart = chart.cloneNode(true);
-            
-            // Bloqueia cliques mas NÃO bloqueia mousemove (necessário para tooltips)
-            chart.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }, true); // Use capture phase
-            
-            // Para mobile: bloqueia toque longo e tap
-            chart.addEventListener('touchstart', function(e) {
-                // Permite scroll com 1 dedo, bloqueia apenas se for tap
-                if (e.touches.length === 1 && !e.target.closest('.modebar')) {
-                    // Não previne completamente para não quebrar scroll
-                    // Apenas impede ação de clique
-                }
-            }, { passive: false });
-            
-            // IMPORTANTE: NÃO bloqueia mousemove - isso mantém tooltips
-            chart.addEventListener('mousemove', function(e) {
-                // Deixa passar para o Plotly
-                return true;
-            });
-        });
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupCharts);
-    } else {
-        setupCharts();
-    }
-    
-    const observer = new MutationObserver(() => setupCharts());
-    observer.observe(document.body, { childList: true, subtree: true });
-})();
+observer.observe(document.body, { childList: true, subtree: true, attributes: true });
 </script>
 """, height=0)
 

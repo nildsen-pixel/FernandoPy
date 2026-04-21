@@ -340,7 +340,7 @@ div[data-baseweb="button-group"] button[kind="pills"] {
     border-radius: 0;
     background: transparent !important;
     border-bottom: 2px solid transparent !important;
-    color: #9E9E9E !important;
+    color: #94A3B8 !important;
 }
 
 /* Botão ativo */
@@ -349,14 +349,14 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
     margin: 0;
     border-radius: 0;
     background: transparent !important;
-    color: #1E293B !important; /* sua cor original */
-    border-bottom: 2px solid #FF4B4B !important;
+    color: #94A3B8 !important; /* sua cor original */
+    border-bottom: 2px solid #4bdede !important;
 }
 
 /* Hover */
 div[data-baseweb="button-group"] button:hover {
-    background: transparent !important;
-    border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important;
+    background: #d6d6c3 !important;
+    /* border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important; */
 }
 
 /* Mobile */

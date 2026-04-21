@@ -465,6 +465,9 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
 
     # LAYOUT DO GRÁFICO
     fig.update_layout(
+        autosize=True,  # Importante: autosize True
+        height=None,    # Remove altura fixa
+        margin=dict(l=10, r=10, t=40, b=10),  # Margens reduzidas
         hovermode='x unified',
         hoverlabel=dict(
             bgcolor="#1E293B",

@@ -349,7 +349,7 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
     margin: 0;
     border-radius: 0;
     background: linear-gradient(90deg, #364040, #526666); !important;
-    color: #e0e0d1 !important; /* sua cor original */
+    color: #e0e0d1 !important;
     border: 2px solid transparent !important;
 }
 
@@ -357,7 +357,6 @@ div[data-baseweb="button-group"] button[kind="pillsActive"] {
 div[data-baseweb="button-group"] button:hover {
     background: #d6d6c3 !important;
     color: #212929 !important;
-    /* border-bottom: 2px solid rgba(255, 75, 75, 0.3) !important; */
 }
 
 /* Mobile */
@@ -370,39 +369,58 @@ div[data-baseweb="button-group"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# --- 5. SOLUÇÃO ALTERNATIVA RÁPIDA - FORÇA GRÁFICO VISÍVEL ---
+# --- ETAPA 2: CSS PARA PROTEGER O GRÁFICO ---
 st.markdown("""
 <style>
-/* SOLUÇÃO RADICAL - FORÇA GRÁFICO VISÍVEL */
-.stPlotlyChart,
-.stPlotlyChart *,
-.js-plotly-plot,
-.plotly,
-.main-svg {
-    visibility: visible !important;
-    opacity: 1 !important;
-    display: block !important;
+/* PROTEÇÃO DO GRÁFICO - IMPEDE QUE DESAPAREÇA */
+.stPlotlyChart {
+    pointer-events: auto !important;
+    touch-action: auto !important;
+    user-select: auto !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Garante que o canvas do Plotly capture todos os eventos */
+.stPlotlyChart .plotly .main-svg {
     pointer-events: auto !important;
 }
 
-/* Impede qualquer transform que possa esconder */
-.plotly .main-svg {
-    transform: translate3d(0,0,0) !important;
+/* Previne desaparecimento durante interações */
+.stPlotlyChart:active,
+.stPlotlyChart:focus,
+.stPlotlyChart:hover {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
 }
 
-/* Para mobile - garante scroll */
+/* Mobile: garante rolagem suave sem sumir */
 @media (max-width: 768px) {
     .stPlotlyChart {
-        min-height: 400px !important;
-        height: auto !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
+        overflow: visible !important;
+        touch-action: pan-x pan-y !important;
     }
+    
+    /* Remove qualquer transform que possa causar desaparecimento */
+    .stPlotlyChart > div {
+        transform: none !important;
+    }
+}
+
+/* Previne que o gráfico seja afetado por seleção de texto */
+.plotly .modebar {
+    pointer-events: auto !important;
+    z-index: 100 !important;
+}
+
+/* Mantém o gráfico estável durante scroll */
+.plotly .svg-container {
+    will-change: auto !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 6. INTERFACE PRINCIPAL ---
+# --- 5. INTERFACE PRINCIPAL ---
 st_autorefresh(interval=60000, key="data_refresh")
 datas_disponiveis = gerar_dias_uteis()
 
@@ -510,7 +528,6 @@ if st.session_state.active_tab not in opcoes_abas:
     st.session_state.active_tab = opcoes_abas[0]
 
 # Usar pills (requer Streamlit >= 1.30)
-# O st.pills retorna o valor selecionado diretamente quando selection_mode="single"
 aba_selecionada = st.pills(
     "Selecione a aba:",
     options=opcoes_abas,
@@ -557,7 +574,7 @@ updateClock();
 </script>
 """, height=0)
 
-# --- JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (CORRIGIDO) ---
+# --- ETAPA 1: JAVASCRIPT PARA AJUSTAR GRÁFICO NO MOBILE (CORRIGIDO) ---
 components.html("""
 <script>
 // Flag para evitar múltiplas execuções
@@ -609,7 +626,7 @@ window.addEventListener('load', function() {
 </script>
 """, height=0)
 
-# --- PROTEÇÃO DE EVENTOS DO GRÁFICO ---
+# --- ETAPA 3: PROTEÇÃO DE EVENTOS DO GRÁFICO ---
 components.html("""
 <script>
 // Protege os gráficos contra desaparecimento durante interações

@@ -229,37 +229,6 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
     agora_idx = get_ultimo_candle_para_periodo(end_dt)
     
     
-    agora_idx = pd.Timestamp(ultimo_candle_real())
-    if end_dt > agora_idx:
-        verde_count = verde_count[verde_count.index <= agora_idx]
-        vermelha_count = vermelha_count[vermelha_count.index <= agora_idx]
-        mxn_bruto = mxn_bruto[mxn_bruto.index <= agora_idx]
-        brl_bruto = brl_bruto[brl_bruto.index <= agora_idx]
-
-    if not mxn_bruto.dropna().empty:
-        mxn_df = pd.DataFrame(mxn_bruto, columns=['Close'])
-        delta = mxn_df['Close'].diff()
-        gain, loss = delta.where(delta > 0, 0.0), -delta.where(delta < 0, 0.0)
-        avg_gain, avg_loss = gain.ewm(alpha=1/14, min_periods=1, adjust=False).mean(), loss.ewm(alpha=1/14, min_periods=1, adjust=False).mean()
-        mxn_df['RSI_14'] = 100 - (100 / (1 + (avg_gain / avg_loss)))
-        
-        exp1, exp2 = mxn_df['Close'].ewm(span=12, adjust=False).mean(), mxn_df['Close'].ewm(span=26, adjust=False).mean()
-        ppo_line = ((exp1 - exp2) / exp2) * 100 
-        ppo_hist = (ppo_line - ppo_line.ewm(span=9, adjust=False).mean()).fillna(0)
-        
-        pct_mxn = (((mxn_bruto - mxn_ref) / mxn_ref) * 100) if mxn_ref != 0 else (mxn_bruto * 0)
-        pct_brl = (((brl_bruto - brl_ref) / brl_ref) * 100) if brl_ref != 0 else (brl_bruto * 0) 
-        
-        rastro_azul = ((pct_mxn * 40) * (1 + (ppo_hist * 10))).round(0)
-        # linha_cinza = (pct_mxn * 40).round(0) 
-        # linha_ambar = (pct_brl * 40).round(0) 
-        # rsi_atual_mxn, ppo_atual = mxn_df['RSI_14'].iloc[-1], ppo_hist.iloc[-1]
-    else:
-        rastro_azul = pd.Series(0, index=verde_count.index)
-        # linha_cinza = pd.Series(0, index=verde_count.index)
-        # linha_ambar = pd.Series(0, index=verde_count.index)
-
-    
     # Verifica se precisa truncar (apenas para dados do período atual)
     if end_dt > agora_idx and isinstance(agora_idx, pd.Timestamp):
         if verde_count is not None and not verde_count.empty:
@@ -286,18 +255,18 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         pct_mxn = (((mxn_bruto - mxn_ref) / mxn_ref) * 100) if mxn_ref != 0 else (mxn_bruto * 0)
         pct_brl = (((brl_bruto - brl_ref) / brl_ref) * 100) if brl_ref != 0 else (brl_bruto * 0) 
         
-        #rastro_azul = ((pct_mxn * 40) * (1 + (ppo_hist * 10))).round(0)
+        rastro_azul = ((pct_mxn * 40) * (1 + (ppo_hist * 10))).round(0)
         linha_cinza = (pct_mxn * 40).round(0) 
         linha_ambar = (pct_brl * 40).round(0) 
         rsi_atual_mxn, ppo_atual = mxn_df['RSI_14'].iloc[-1], ppo_hist.iloc[-1]
     else:
         # Fallback para quando não há dados MXN
         if verde_count is not None and not verde_count.empty:
-            #rastro_azul = pd.Series(0, index=verde_count.index)
+            rastro_azul = pd.Series(0, index=verde_count.index)
             linha_cinza = pd.Series(0, index=verde_count.index)
             linha_ambar = pd.Series(0, index=verde_count.index)
         else:
-            #rastro_azul = pd.Series(dtype=float)
+            rastro_azul = pd.Series(dtype=float)
             linha_cinza = pd.Series(dtype=float)
             linha_ambar = pd.Series(dtype=float)
         rsi_atual_mxn, ppo_atual = 50, 0

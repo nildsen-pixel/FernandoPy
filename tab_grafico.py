@@ -140,7 +140,7 @@ def get_ultimo_candle_para_periodo(end_dt):
     # Se inclui o presente, usa o último candle real com cache
     return get_ultimo_candle_cacheado()
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def processar_dados_historicos(start_dt, end_dt):
     """
     Processa APENAS dados históricos (imutáveis) do MXN/BRL
@@ -239,6 +239,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             mxn_bruto = mxn_bruto[mxn_bruto.index <= agora_idx]
         if brl_bruto is not None and not brl_bruto.empty:
             brl_bruto = brl_bruto[brl_bruto.index <= agora_idx]
+    
 
     # --- CÁLCULOS DAS MÉTRICAS (RSI, PPO, etc) ---
     if mxn_bruto is not None and not mxn_bruto.dropna().empty:
@@ -256,6 +257,9 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
         pct_brl = (((brl_bruto - brl_ref) / brl_ref) * 100) if brl_ref != 0 else (brl_bruto * 0) 
         
         rastro_azul = ((pct_mxn * 40) * (1 + (ppo_hist * 10))).round(0)
+        if end_dt > agora_idx and isinstance(agora_idx, pd.Timestamp):
+            if rastro_azul is not None and not rastro_azul.empty:
+                rastro_azul = rastro_azul[rastro_azul.index <= agora_idx]
         linha_cinza = (pct_mxn * 40).round(0) 
         linha_ambar = (pct_brl * 40).round(0) 
         rsi_atual_mxn, ppo_atual = mxn_df['RSI_14'].iloc[-1], ppo_hist.iloc[-1]

@@ -110,7 +110,7 @@ def get_ativos_com_cache(tickers, start_dt, end_dt, modo):
     # Apenas dados de hoje
     return get_ativos_hoje_cache(tickers_tuple, modo)
 
-@st.cache_data(ttl=30, show_spinner=False)  # Cache de 30 segundos para o último candle
+@st.cache_data(ttl=60, show_spinner=False)  # Cache de 30 segundos para o último candle
 def get_ultimo_candle_cacheado():
     """
     Retorna o último candle real com cache curto.

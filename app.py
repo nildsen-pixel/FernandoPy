@@ -10,7 +10,6 @@ from pathlib import Path
 import streamlit.components.v1 as components
 from streamlit_autorefresh import st_autorefresh
 import requests
-from datetime import datetime
 
 # Imports das abas
 from tab_grafico import render_grafico
@@ -371,7 +370,55 @@ div[data-baseweb="button-group"] button:hover {
 """, unsafe_allow_html=True)
 
 # --- 5. INTERFACE PRINCIPAL ---
-st_autorefresh(interval=60000, key="data_refresh")
+
+from datetime import datetime, timedelta
+import pytz
+
+def calcular_proximo_refresh():
+    tz = pytz.timezone("America/Sao_Paulo")
+    agora = datetime.now(tz)
+
+    minuto = agora.minute
+    segundo = agora.second
+
+    # Próximo múltiplo de 5
+    proximo_multiplo = ((minuto // 5) + 1) * 5
+
+    if proximo_multiplo == 60:
+        proximo_horario = agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    else:
+        proximo_horario = agora.replace(minute=proximo_multiplo, second=0, microsecond=0)
+
+    # Subtrai 1 minuto (seu requisito)
+    alvo = proximo_horario - timedelta(minutes=1)
+
+    # Se já passou, vai pro próximo ciclo
+    if alvo <= agora:
+        proximo_multiplo += 5
+        if proximo_multiplo >= 60:
+            alvo = agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1) - timedelta(minutes=1)
+        else:
+            alvo = agora.replace(minute=proximo_multiplo, second=0, microsecond=0) - timedelta(minutes=1)
+
+    delta = (alvo - agora).total_seconds()
+
+    # mínimo de segurança
+    return max(int(delta * 1000), 1000)
+
+
+intervalo = calcular_proximo_refresh()
+
+st_autorefresh(
+    interval=intervalo,
+    key="data_refresh_alinhado"
+)
+
+
+#st_autorefresh(interval=60000, key="data_refresh")
+
+
+
+
 datas_disponiveis = gerar_dias_uteis()
 
 # --- CONTROLE DE ATUALIZAÇÃO DOS DADOS (60s) ---

@@ -139,7 +139,9 @@ header {
 @media (min-width: 1024px) {
     .stPlotlyChart,
     .stPlotlyChart > div {
-        min-height: calc(100vh - 300px) !important;
+        height: calc(100vh - 220px) !important;
+        min-height: calc(100vh - 220px) !important;
+        max-height: calc(100vh - 220px) !important;
     }
 }
 
@@ -156,7 +158,7 @@ header {
     .stPlotlyChart,
     .stPlotlyChart > div {
         min-height: calc(100vh - 220px) !important;
-        height: calc(100vh - 220px) !important;
+        height: calc(100vh - 160px) !important;
         max-height: calc(100vh - 220px) !important;
     }
     
@@ -522,10 +524,10 @@ else:
 
 # --- CONTROLE DE ABA ATIVA (SOLUÇÃO PILLS - MODERNA) ---
 if "active_tab" not in st.session_state:
-    st.session_state.active_tab = "📈 Gráfico"
+    st.session_state.active_tab = "Gráfico"
 
 # Opções das abas
-opcoes_abas = ["📈 Gráfico", "🎯 Backtest de Correlação", "🔥 Mapa de Calor Abertura"]
+opcoes_abas = ["Gráfico", "Correlação", "Mapa de Calor Abertura"]
 
 # Garantir que o valor atual seja válido
 if st.session_state.active_tab not in opcoes_abas:
@@ -549,11 +551,11 @@ if aba_selecionada:
 st.markdown('<hr style="margin: 0.5rem 0 1.5rem 0; opacity: 0.2;">', unsafe_allow_html=True)
 
 # --- RENDERIZAR APENAS A ABA SELECIONADA ---
-if st.session_state.active_tab == "📈 Gráfico":
+if st.session_state.active_tab == "Gráfico":
     render_grafico(start_dt, end_dt, placeholder_dados)
-elif st.session_state.active_tab == "🎯 Backtest de Correlação":
+elif st.session_state.active_tab == "Correlação":
     render_backtest(start_dt, end_dt)
-elif st.session_state.active_tab == "🔥 Mapa de Calor Abertura":
+elif st.session_state.active_tab == "Mapa de Calor Abertura":
     render_heatmap(start_dt, end_dt)
 
 # --- RELÓGIO JS ---
@@ -593,18 +595,12 @@ function resizeChartsForMobile() {
         var newHeight = windowHeight - headerHeight;
         
         charts.forEach(function(chart) {
-            if (chart && chart.style) {
-                // Força altura exata
-                chart.style.height = newHeight + 'px';
-                chart.style.minHeight = newHeight + 'px';
-                chart.style.maxHeight = newHeight + 'px';
-                
+            if (chart && chart.style) {               
                 // Redimensiona o Plotly se existir
                 if (chart.children[0] && chart.children[0]._fullLayout) {
                     try {
                         Plotly.relayout(chart.children[0], {
-                            autosize: true,
-                            height: newHeight
+                            autosize: true
                         });
                     } catch(e) {
                         console.log("Plotly not ready yet");

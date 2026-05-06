@@ -479,7 +479,7 @@ def render_grafico(start_dt, end_dt, placeholder_dados):
             bordercolor="rgba(255,255,255,0.2)",
             align="left"
         ),
-        height=380,
+        height=None,
         showlegend=True,
         legend=dict(
             orientation="h",
